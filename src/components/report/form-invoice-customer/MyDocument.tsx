@@ -2,66 +2,117 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import Table from './Table';
-import '@/utils/fontSetup'; // Import file đăng ký font
+import '@/utils/fontSetup'; // Import font
 
-// Định nghĩa các kiểu dáng cho tài liệu
+// Định nghĩa các kiểu dáng cho hóa đơn
 const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     padding: 20,
-    fontFamily: 'Roboto', // Đặt font chữ Roboto nếu cần
+    fontFamily: 'Roboto', // Đặt font chữ Roboto
   },
-  section: {
-    margin: 5,
-    padding: 2,
+  header: {
+    marginBottom: 20,
+    padding: 10,
+    borderBottomWidth: 2,
+    borderBottomColor: '#4f81bd',
+    textAlign: 'center',
+  },
+  companyInfo: {
     fontSize: 12,
-    fontFamily: 'Roboto', // Đặt font chữ Roboto cho các đoạn văn bản
+    marginBottom: 8,
+    color: '#333',
   },
-  title: {
-    fontSize: 20, // Tăng kích thước chữ
-    fontWeight: 'bold', // In đậm
-    textAlign: 'center', // Căn giữa
-    marginBottom: 12, // Khoảng cách dưới
-    // color: 'red', // Đặt màu chữ đỏ
+  invoiceTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+    color: '#333',
   },
-  subtitle: {
-    fontSize: 14, // Kích thước chữ nhỏ hơn tiêu đề
-    marginBottom: 8, // Khoảng cách dưới
-    fontWeight: 'bold', // In đậm
-    color: 'green', // Màu xanh lá
+  customerSection: {
+    marginBottom: 20,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 4,
+  },
+  customerText: {
+    fontSize: 12,
+    marginBottom: 4,
+    color: '#555',
+  },
+  tableContainer: {
+    flexDirection: 'column',
+    marginTop: 10,
+  },
+  totalContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#ccc',
+    fontSize: 12,
+  },
+  footer: {
+    fontSize: 10,
+    color: '#555',
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
 
-// Hàm để lấy ngày giờ hiện tại
+// Hàm lấy ngày giờ hiện tại
 const getCurrentDateTime = () => {
   const now = new Date();
-  return now.toLocaleString(); // Định dạng ngày giờ theo địa phương
+  return now.toLocaleString();
 };
 
 interface MyDocumentProps {
   orderId: string | null;
+  customerName: string;
+  customerAddress: string;
 }
 
-// Tạo một component PDFDocument để hiển thị nội dung PDF
-const MyDocument: React.FC<MyDocumentProps> = ({ orderId }) => {
+// Component hóa đơn
+const MyDocument: React.FC<MyDocumentProps> = ({ orderId, customerName, customerAddress }) => {
   const currentDateTime = getCurrentDateTime();
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <View style={styles.section}>
-          <Text>Ngày lập: {currentDateTime}</Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.companyInfo}>Công ty TNHH Kho Hàng</Text>
+          <Text style={styles.companyInfo}>Địa chỉ: 123 Đường ABC, Phường XYZ, TP. HCM</Text>
+          <Text style={styles.companyInfo}>Điện thoại: 0123 456 789</Text>
         </View>
-        <View style={styles.section}>
-          <Text style={styles.title}>HÓA ĐƠN</Text>
-          {orderId && (
-            <Text style={styles.subtitle}>
-              ID: DH000{orderId}
-            </Text>
-          )}
+
+        {/* Title */}
+        <Text style={styles.invoiceTitle}>HÓA ĐƠN</Text>
+        <Text style={styles.companyInfo}>Ngày lập: {currentDateTime}</Text>
+
+        {/* Mã hóa đơn */}
+        {orderId && (
+          <Text style={styles.companyInfo}>Mã hóa đơn: DH000{orderId}</Text>
+        )}
+
+        {/* Thông tin khách hàng */}
+        <View style={styles.customerSection}>
+          <Text style={styles.customerText}>Tên khách hàng: {customerName}</Text>
+          <Text style={styles.customerText}>Địa chỉ: {customerAddress}</Text>
         </View>
-        <View style={styles.section}>
+
+        {/* Bảng Dữ Liệu */}
+        <View style={styles.tableContainer}>
           <Table orderId={orderId} />
+        </View>
+
+        
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text>© 2024 Công ty TNHH Kho Hàng - Tất cả các quyền được bảo lưu</Text>
         </View>
       </Page>
     </Document>

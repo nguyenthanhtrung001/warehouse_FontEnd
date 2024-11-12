@@ -162,6 +162,7 @@ Khi một số người làm việc tốt, những điều mà họ đã làm s�
                 <h4 className="mb-3.5 font-medium text-black dark:text-white">
                   Ngày vào làm: {employee?.dateJoined}
                 </h4>
+                
                 <div className="flex items-center justify-center gap-3.5">
                   <Link
                     href="#"

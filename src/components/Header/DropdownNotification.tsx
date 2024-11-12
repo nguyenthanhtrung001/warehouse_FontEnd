@@ -17,7 +17,7 @@ const DropdownNotification = () => {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const data = await fetchLowestProducts();
+        const data = await fetchLowestProducts(1,2);
         setProducts(data);
       } catch (error) {
         console.error('Failed to load products', error);

@@ -6,12 +6,11 @@ import ChartTwo from "../Charts/ChartTwo";
 import TopProductInventory from "../Chat/TopProductInventory";
 import TableProductTopSale1 from "@/components/Tables/TableProductTopSale1";
 import CardDataStats from "../CardDataStats";
-import axios from 'axios';
 import { useEffect, useState } from 'react';
 import API_ROUTES from '@/utils/apiRoutes'; // Thay đổi đường dẫn tương ứng
 import axiosInstance from '@/utils/axiosInstance';
 import ApexChart from '../Charts/ChartProductSaleMonth'; // Đường dẫn đến component của bạn
-
+import { useEmployeeStore } from '@/stores/employeeStore';
 
 
 const MapOne = dynamic(() => import("@/components/Maps/MapOne"), {
@@ -33,6 +32,7 @@ const ECommerce: React.FC = () => {
   const [returnNotes, setReturnNotes] = useState<number | null>(null);
   const [products, setProducts] = useState<number | null>(null);
   const [purchasePrice, setPurchasePrice] = useState<number | null>(null);
+  const { employee } = useEmployeeStore();
   // const month = 8; // Tháng 8
   // const year = 2024; // Năm 2024
   const today = new Date();
@@ -41,12 +41,12 @@ const ECommerce: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-   
+      if (!employee || !employee.warehouseId) return;
 
-      const revenuePromise = axiosInstance.get(API_ROUTES.REVENUE);
-      const returnNotesPromise = axiosInstance.get(API_ROUTES.RETURN_NOTES);
+      const revenuePromise = axiosInstance.get(API_ROUTES.REVENUE(employee?.warehouseId));
+      const returnNotesPromise = axiosInstance.get(API_ROUTES.RETURN_NOTES(employee?.warehouseId));
       const productsPromise = axiosInstance.get(API_ROUTES.PRODUCTS);
-      const purchasePromise = axiosInstance.get(API_ROUTES.PURCHASE);
+      const purchasePromise = axiosInstance.get(API_ROUTES.IMPORT_PRICES(employee?.warehouseId));
 
       try {
         const results = await Promise.allSettled([revenuePromise, returnNotesPromise, productsPromise, purchasePromise]);
@@ -79,7 +79,7 @@ const ECommerce: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [employee]);
 
   return (
     <>

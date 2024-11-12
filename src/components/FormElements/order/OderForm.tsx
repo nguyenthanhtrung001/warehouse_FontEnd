@@ -106,9 +106,10 @@ const Home: React.FC = () => {
               (total, product) => total + product.quantity * product.price,
               0
             ),
-            employeeId: employee?.id||1,
+            employeeId: employee?.id,
             order_Details: orderDetails,
             note: note,
+            warehouseId: employee?.warehouseId,
           };
           console.log("Dữ liệu gửi đi:", JSON.stringify(data));
 

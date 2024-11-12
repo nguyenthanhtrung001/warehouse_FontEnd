@@ -103,12 +103,13 @@ const Home: React.FC = () => {
           const data = {
             supplier: parseInt(selectedSupplier),
             price: products.reduce((total, product) => total + product.quantity * product.price, 0),
-            employeeId: employee?.id||1,
+            employeeId: employee?.id,
             import_Export_Details: importExportDetails,
             batchName: batchName,
             expiryDate: expiryDate,
             note: note,
             location: location,
+            warehouseId:  employee?.warehouseId,
           };
           console.log('Dữ liệu gửi đi:', JSON.stringify(data));
           const response = await axios.post(API_ROUTES.RECEIPTS, data);

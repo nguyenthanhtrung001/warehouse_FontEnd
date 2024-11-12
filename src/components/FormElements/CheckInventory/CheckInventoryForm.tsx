@@ -12,7 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import API_ROUTES from '@/utils/apiRoutes';
 import axiosInstance from '@/utils/axiosInstance';
 import Swal from 'sweetalert2'; // Import SweetAlert2
-import { useEmployeeStore, initializeEmployeeFromLocalStorage } from '@/stores/employeeStore';
+import { useEmployeeStore } from '@/stores/employeeStore';
 
 
 
@@ -44,9 +44,13 @@ const InventoryCheck: React.FC = () => {
     fetchProducts();
   }, []);
 
-  const fetchInventory = async (receiptId: string) => {
+  const fetchInventory = async (productId: string) => {
+
+    const productIdNumber = Number(productId);
+    if (!employee || !employee.warehouseId) return;
+    
     try {
-      const response = await axiosInstance.get(`${API_ROUTES.API_BATCH_DETAILS_ALL_PRODUCT}/${receiptId}`);
+      const response = await axiosInstance.get(`${API_ROUTES.API_BATCH_DETAILS_SPECIFIC_PRODUCT(productIdNumber,employee?.warehouseId)}`);
       const data = response.data;
       console.log('Fetched Data:', JSON.stringify(data, null, 2)); // Xuất dữ liệu dưới dạng JSON
 
@@ -114,9 +118,10 @@ const InventoryCheck: React.FC = () => {
           }));
 
         const data = {
-          employeeId:employee?.id||1,
+          employeeId:employee?.id,
           inventoryCheckDetails: receiptDetails,
           notes: note,
+          warehouseId: employee?.warehouseId,
         };
 
         if (receiptDetails.length === 0) {

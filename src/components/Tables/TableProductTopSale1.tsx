@@ -3,18 +3,29 @@ import { BRAND } from "@/types/brand";
 import Image from "next/image";
 import axiosInstance from '@/utils/axiosInstance';
 import API_ROUTES from '@/utils/apiRoutes';
+import { useEmployeeStore } from '@/stores/employeeStore';
 
 const TableOne = () => {
   const [brands, setBrands] = useState<BRAND[]>([]);
   const [selectedTop, setSelectedTop] = useState<number>(3);
+  const { employee } = useEmployeeStore();
 
   useEffect(() => {
-    fetchData(selectedTop);
-  }, [selectedTop]);
+    fetchData(selectedTop); // Gọi API mỗi khi selectedTop thay đổi
+  }, [selectedTop]); // Chỉ phụ thuộc vào selectedTop
+
+  useEffect(() => {
+    
+    if (employee) {
+      fetchData(selectedTop); // Gọi API mỗi khi employee có giá trị
+    }
+  }, [employee]); // Chỉ phụ thuộc vào employee
 
   const fetchData = async (top: number) => {
+    if (!employee || !employee.warehouseId) return;
     try {
-      const response = await axiosInstance.get(`${API_ROUTES.TOP_SALE_PRODUCTS}?top=${top}`);
+      console.log(`Fetching data with top: ${top}, warehouseId: ${employee?.warehouseId}`);
+      const response = await axiosInstance.get(`${API_ROUTES.TOP_SALE_PRODUCTS(top, employee?.warehouseId)}`);
       const data: BRAND[] = response.data;
       setBrands(data);
     } catch (error) {
@@ -86,11 +97,7 @@ const TableOne = () => {
 
         {brands && Array.isArray(brands) && brands.map((brand, key) =>  (
           <div
-            className={`grid grid-cols-3 sm:grid-cols-5 ${
-              key === brands.length - 1
-                ? ""
-                : "border-b border-stroke dark:border-strokedark"
-            }`}
+            className={`grid grid-cols-3 sm:grid-cols-5 ${key === brands.length - 1 ? "" : "border-b border-stroke dark:border-strokedark"}`}
             key={key}
           >
             <div className="flex items-center gap-3 p-2.5 xl:p-5">

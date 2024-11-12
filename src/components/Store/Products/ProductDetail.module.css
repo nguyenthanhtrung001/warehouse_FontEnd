@@ -1,0 +1,42 @@
+.container {
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    padding: 20px; /* Thêm padding để nội dung không chạm vào mép */
+    border-radius: 10px; /* Bo góc cho container */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Thêm bóng cho container */
+  }
+  
+  .button {
+    background-color: #2f855a; /* Màu nút */
+    color: white;
+    padding: 0.75rem 1.5rem; /* Padding */
+    border-radius: 0.375rem; /* Bo góc */
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease; /* Thêm hiệu ứng cho bóng */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Bóng nhẹ cho nút */
+    font-size: 1rem; /* Cỡ chữ cho nút */
+  }
+  
+  .button:hover {
+    background-color: #2b6cb0; /* Màu khi hover */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Tăng bóng khi hover */
+    transform: translateY(-2px); /* Nâng nút lên một chút khi hover */
+  }
+  
+  .button:active {
+    transform: scale(0.95); /* Nhỏ lại nút khi nhấn */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Giảm bóng khi nhấn */
+  }
+  
+  .added {
+    background-color: #38a169; /* Màu xanh khi thêm thành công */
+    animation: shake 0.3s ease; /* Hiệu ứng lắc */
+    transition: background-color 0.5s ease; /* Thêm hiệu ứng chuyển màu khi thêm thành công */
+  }
+  
+  @keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+  }
+  

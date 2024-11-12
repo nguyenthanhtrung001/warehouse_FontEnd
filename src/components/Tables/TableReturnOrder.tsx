@@ -8,6 +8,7 @@ import API_ROUTES from '@/utils/apiRoutes'; // Import API routes từ cấu hìn
 import axiosInstance from '@/utils/axiosInstance';
 import { format } from 'date-fns';
 import Swal from 'sweetalert2';
+import { useEmployeeStore } from '@/stores/employeeStore';
 
 const TableReturnOrder = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -17,11 +18,12 @@ const TableReturnOrder = () => {
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const router = useRouter();
-  
+  const { employee } = useEmployeeStore();
 
   const fetchInvoices = useCallback(async () => {
+    if (!employee || !employee.warehouseId) return;
     try {
-      const response = await axiosInstance.get(API_ROUTES.INVOICES_BY_STATUS(3));
+      const response = await axiosInstance.get(API_ROUTES.INVOICES_BY_STATUS(3,employee?.warehouseId));
       const invoiceList = response.data
         .filter((item: any) => {
           const printDate = new Date(item.printDate);
@@ -35,10 +37,10 @@ const TableReturnOrder = () => {
         .map((item: any) => ({
           id: item.id,
           printDate: new Date(item.printDate),
-          customerName: item.customer.customerName,
-          phoneNumber: item.customer.phoneNumber,
-          address: item.customer.address,
-          note: item.customer.note,
+          // customerName: item.customer.customerName,
+          // phoneNumber: item.customer.phoneNumber,
+          // address: item.customer.address,
+          // note: item.customer.note,
           price: item.price,
           employee: item.employeeId,
           status: item.status === 2 ? "Đã thanh toán" : "Tồn tại trả",
@@ -47,7 +49,7 @@ const TableReturnOrder = () => {
     } catch (error) {
       console.error("Error fetching invoices: ", error);
     }
-  }, [startDate, endDate, searchTerm]);
+  }, [startDate, endDate, searchTerm, employee]);
 
   const handleInvoiceClick = async (invoice: any) => {
     try {
@@ -107,7 +109,7 @@ const TableReturnOrder = () => {
 
   useEffect(() => {
     fetchInvoices();
-  }, [startDate, endDate, searchTerm, fetchInvoices]);
+  }, [startDate, endDate, searchTerm, fetchInvoices, employee]);
 
   return (
     <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark ">

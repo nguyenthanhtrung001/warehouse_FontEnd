@@ -36,7 +36,7 @@ const ReportPage = () => {
       <div className="flex-grow flex justify-center items-center">
         {orderId && (
           <PDFViewer width="100%" height="100%">
-            <MyDocument orderId={orderId} />
+            <MyDocument orderId={orderId} customerName={''} customerAddress={''} />
           </PDFViewer>
         )}
       </div>

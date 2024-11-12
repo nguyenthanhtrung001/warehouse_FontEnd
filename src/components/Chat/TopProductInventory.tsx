@@ -4,15 +4,18 @@ import Image from "next/image";
 import { Chat } from "@/types/chat";
 import axiosInstance from '@/utils/axiosInstance';
 import API_ROUTES from '@/utils/apiRoutes';
+import { useEmployeeStore } from '@/stores/employeeStore';
 
 const ChatCard = () => {
   const [chatData, setChatData] = useState<Chat[]>([]);
   const [top, setTop] = useState<number>(5); // Mặc định chọn 5
+  const { employee } = useEmployeeStore();
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!employee || !employee.warehouseId) return;
       try {
-        const response = await axiosInstance.get(`${API_ROUTES.TOP_LOWEST_PRODUCTS}?top=${top}`);
+        const response = await axiosInstance.get(`${API_ROUTES.TOP_LOWEST_PRODUCTS(top,employee?.warehouseId)}`);
         const data = response.data;
         const formattedData: Chat[] = data.map((product: any) => ({
           avatar: product.image ? product.image : "/images/product/product-01.png",
@@ -27,7 +30,7 @@ const ChatCard = () => {
     };
 
     fetchData();
-  }, [top]);
+  }, [top,employee] );
 
   return (
     <div className="col-span-12 rounded-sm border border-stroke bg-white py-6 shadow-default dark:border-strokedark dark:bg-boxdark xl:col-span-4">

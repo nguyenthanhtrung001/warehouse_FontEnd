@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import axiosInstance from "@/utils/axiosInstance";
 import { ApexOptions } from "apexcharts";
+import API_ROUTES from '@/utils/apiRoutes';
+import { useEmployeeStore } from '@/stores/employeeStore';
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -165,14 +167,23 @@ const options: ApexOptions = {
 
 const ChartProductSale12Month: React.FC = () => {
   const [series, setSeries] = useState<{ name: string; data: number[] }[]>([]);
+  const { employee } = useEmployeeStore();
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!employee || !employee.warehouseId) {
+        console.error("Employee data is not available.");
+        return; // Dừng việc gọi API nếu employee không có hoặc warehouseId không tồn tại
+      }
+
       try {
         const currentYear = new Date().getFullYear();
         const response = await axiosInstance.get(
-          `http://localhost:8888/v1/api/invoices/api/product-summary?year=${currentYear}`
+          API_ROUTES.PRODUCT_SUMMARY_WAREHOUSE(currentYear, employee.warehouseId)
         );
+
+        console.log("API Response:", response.data);
+
         const chartData = response.data.chartData;
         setSeries(chartData);
       } catch (error) {
@@ -181,7 +192,7 @@ const ChartProductSale12Month: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [employee]); 
 
   return (
     <div className="mb-20 mt-2 col-span-12 rounded-sm border border-stroke bg-white px-5 pb-5 pt-7.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:col-span-8">

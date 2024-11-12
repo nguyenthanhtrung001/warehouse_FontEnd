@@ -4,13 +4,14 @@ import API_ROUTES from '@/utils/apiRoutes';
 import Swal from 'sweetalert2';
 import { Employee } from '@/types/employee';
 import Switcher from '@/components/Switchers/SwitcherThree'
+import { useEmployeeStore } from '@/stores/employeeStore';
 
 interface FormAddEmployeeProps {
   employee?: Employee | null;
   isUpdate: boolean;
 }
 
-const FormAddEmployee: React.FC<FormAddEmployeeProps> = ({ employee, isUpdate }) => {
+const FormAddEmployee: React.FC<FormAddEmployeeProps> = ({ employee: employee2, isUpdate }) => {
   
   // Hàm để lấy ngày hiện tại dưới dạng chuỗi yyyy-mm-dd
   const getCurrentDateString = () => {
@@ -33,20 +34,22 @@ const FormAddEmployee: React.FC<FormAddEmployeeProps> = ({ employee, isUpdate })
     position: 'Nhân viên', 
     status: 1,
     basicSalary: 0,
-    account_id: false, 
+    accountId: false, 
     
     
   });
+  
+ 
 
   useEffect(() => {
-    if (employee && isUpdate) {
+    if (employee2 && isUpdate) {
       setFormData({
-        ...employee,
-        id: employee.id.toString(),
-        dateOfBirth: new Date(employee.dateOfBirth).toISOString().split('T')[0],
-        dateJoined: new Date(employee.dateJoined).toISOString().split('T')[0],
-        account_id: false,
-        position: employee.position || 'Nhân viên',
+        ...employee2,
+        id: employee2.id.toString(),
+        dateOfBirth: new Date(employee2.dateOfBirth).toISOString().split('T')[0],
+        dateJoined: new Date(employee2.dateJoined).toISOString().split('T')[0],
+        accountId: false,
+        position: employee2.position || 'Nhân viên',
       });
     } else {
       setFormData({
@@ -61,17 +64,19 @@ const FormAddEmployee: React.FC<FormAddEmployeeProps> = ({ employee, isUpdate })
         position: 'Nhân viên',
         status: 1,
         basicSalary: 0,
-        account_id: false,
+        accountId: false,
       });
     }
-  }, [employee, isUpdate]);
+  }, [employee2, isUpdate]);
+  const { employee } = useEmployeeStore();
+ 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
   const handleCheckboxChange = (checked: boolean) => {
-    setFormData({ ...formData, account_id: checked });
+    setFormData({ ...formData, accountId: checked });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -93,10 +98,12 @@ const FormAddEmployee: React.FC<FormAddEmployeeProps> = ({ employee, isUpdate })
         const payload = {
           ...formData,
           id: parseInt(formData.id, 10),
+          warehouseId: employee?.warehouseId,
         };
+        console.log("data:",payload);
 
-        if (isUpdate && employee?.id !== undefined) {
-          await axiosInstance.put(API_ROUTES.EMPLOYEE_DETAILS(employee.id), payload);
+        if (isUpdate && employee2?.id !== undefined) {
+          await axiosInstance.put(API_ROUTES.EMPLOYEE_DETAILS(employee2.id), payload);
         } else {
           await axiosInstance.post(API_ROUTES.EMPLOYEES, payload);
         }
@@ -228,7 +235,7 @@ const FormAddEmployee: React.FC<FormAddEmployeeProps> = ({ employee, isUpdate })
         <div >
         Tạo tài khoản hệ thống
           <Switcher
-            isChecked={formData.account_id}
+            isChecked={formData.accountId}
             onChange={handleCheckboxChange}
           /> 
         </div>

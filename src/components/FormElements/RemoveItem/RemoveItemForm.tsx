@@ -13,7 +13,7 @@ import axiosInstance from '@/utils/axiosInstance';
 import Swal from 'sweetalert2';
 import API_ROUTES from '@/utils/apiRoutes';
 import ProductExpiredList from './ProductExpiredList';
-import { useEmployeeStore, initializeEmployeeFromLocalStorage } from '@/stores/employeeStore';
+import { useEmployeeStore } from '@/stores/employeeStore';
 
 
 const UpdateReceipt: React.FC = () => {
@@ -46,7 +46,7 @@ const UpdateReceipt: React.FC = () => {
         }));
         setAllReceipts(filteredProducts);
       } catch (error) {
-        console.error('Lỗi khi lấy phiếu nhập:', error);
+        console.error('Lỗi khi lấy phiếu hủy hàng:', error);
       }
     };
 
@@ -55,10 +55,13 @@ const UpdateReceipt: React.FC = () => {
   
   
 
-  const fetchReceiptById = async (receiptId: string) => {
+  const fetchReceiptById = async (productId: string) => {
+    const productIdNumber = Number(productId);
+    if (!employee || !employee.warehouseId) return;
+    
     try {
-      const response = await axiosInstance.get(`${API_ROUTES.API_BATCH_DETAILS_ALL_PRODUCT}/${receiptId}`);
-      const data = response.data;
+      const response = await axiosInstance.get(`${API_ROUTES.API_BATCH_DETAILS_SPECIFIC_PRODUCT(productIdNumber,employee?.warehouseId)}`);
+          const data = response.data;
       console.log('Fetched Data:', JSON.stringify(data, null, 2)); // Xuất dữ liệu dưới dạng JSON
 
       if (data.length > 0) {
@@ -105,7 +108,7 @@ const UpdateReceipt: React.FC = () => {
       // Xóa toàn bộ bảng sản phẩm hiện tại
       setProducts([]);
   
-      // Lấy chi tiết phiếu nhập mới dựa trên ID sản phẩm đã chọn
+      // Lấy chi tiết phiếu hủy hàng mới dựa trên ID sản phẩm đã chọn
       fetchReceiptById(product.id.toString());
     }
   };
@@ -117,7 +120,7 @@ const UpdateReceipt: React.FC = () => {
       const selectedReceipt = selectedOption.value;
       setSelectedProductId(selectedReceipt.id);
       setProducts([]); // Xóa toàn bộ bảng
-      fetchReceiptById(selectedReceipt.id.toString()); // Lấy chi tiết phiếu nhập mới
+      fetchReceiptById(selectedReceipt.id.toString()); // Lấy chi tiết phiếu hủy hàng mới
     }
   };
 
@@ -132,9 +135,10 @@ const UpdateReceipt: React.FC = () => {
       }));
   
     const data = {
-      employeeId: employee?.id||1,
+      employeeId: employee?.id,
       import_Export_Details: receiptDetails,
       note: note,
+      warehouseId: employee?.warehouseId,
     };
   
     if (receiptDetails.length === 0) {
@@ -144,8 +148,8 @@ const UpdateReceipt: React.FC = () => {
   
     // Xác nhận trước khi gửi
     const result = await Swal.fire({
-      title: 'Xác nhận gửi phiếu nhập',
-      text: "Bạn có chắc chắn muốn gửi phiếu nhập không?",
+      title: 'Xác nhận gửi phiếu hủy hàng',
+      text: "Bạn có chắc chắn muốn gửi phiếu hủy hàng không?",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -167,7 +171,7 @@ const UpdateReceipt: React.FC = () => {
             icon: 'success',
             confirmButtonText: 'OK'
           });
-          // Xóa dữ liệu của bảng và thông tin phiếu nhập
+          // Xóa dữ liệu của bảng và thông tin phiếu hủy hàng
           setProducts([]);
           setExpiryDate('');
           setNote('');
@@ -177,12 +181,12 @@ const UpdateReceipt: React.FC = () => {
           setShouldResetProductList(true);
           setTimeout(() => setShouldResetProductList(false), 0);
         } else {
-          console.error('Gửi phiếu nhập thất bại:', response.statusText);
-          toast.error('Gửi phiếu nhập thất bại!');
+          console.error('Gửi phiếu hủy hàng thất bại:', response.statusText);
+          toast.error('Gửi phiếu hủy hàng  thất bại!');
         }
       } catch (error) {
-        console.error('Lỗi khi gửi phiếu nhập:', error);
-        toast.error('Lỗi khi gửi phiếu nhập!');
+        console.error('Lỗi khi gửi phiếu hủy hàng:', error);
+        toast.error('Lỗi khi gửi phiếu hủy hàng!');
       }
     }
   };

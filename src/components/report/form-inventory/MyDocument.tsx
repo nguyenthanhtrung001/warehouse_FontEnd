@@ -3,50 +3,103 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import Table from './Table';
 import '@/utils/fontSetup'; // Import file đăng ký font
+import { Employee } from '@/types/employee'; // Import kiểu Employee
 
-// Định nghĩa các kiểu dáng cho tài liệu
+// Định nghĩa các màu sắc và kiểu dáng chung
+const colors = {
+  headerBackground: '#4f81bd',
+  headerText: '#ffffff',
+  titleText: '#333333',
+  footerText: '#555555',
+};
+
 const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     padding: 20,
-    fontFamily: 'Roboto', // Đặt font chữ Roboto nếu cần
+    fontFamily: 'Roboto',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.headerBackground,
+    padding: 10,
+    color: colors.headerText,
+    marginBottom: 15,
+  },
+  headerTextLeft: {
+    flex: 1,
+    fontSize: 10,
+    color: colors.headerText,
+    textAlign: 'left',
+    lineHeight: 1.5,
+  },
+  headerCompanyName: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: colors.headerText,
+    textAlign: 'right',
   },
   section: {
     margin: 5,
-    padding: 2,
+    padding: 10,
     fontSize: 12,
-    fontFamily: 'Roboto', // Đặt font chữ Roboto cho các đoạn văn bản
   },
   title: {
-    fontSize: 20, // Tăng kích thước chữ
-    fontWeight: 'bold', // In đậm
-    textAlign: 'center', // Căn giữa
-    marginBottom: 12, // Khoảng cách dưới
-    // color: 'red', // Đặt màu chữ đỏ
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: colors.titleText,
+    marginBottom: 15,
+  },
+  footer: {
+    fontSize: 10,
+    color: colors.footerText,
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
 
 // Hàm để lấy ngày giờ hiện tại
 const getCurrentDateTime = () => {
   const now = new Date();
-  return now.toLocaleString(); // Định dạng ngày giờ theo địa phương
+  return now.toLocaleString();
 };
 
-// Tạo một component PDFDocument để hiển thị nội dung PDF
-const MyDocument = () => {
+// Component tài liệu PDF
+interface MyDocumentProps {
+  employee: Employee | null;
+}
+
+const MyDocument = ({ employee }: MyDocumentProps) => {
   const currentDateTime = getCurrentDateTime();
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-      <View style={styles.section}>
-          <Text>Ngày lập: {currentDateTime}</Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerTextLeft}>
+            <Text>Ngày lập: {currentDateTime}</Text>
+            <Text>Nhân viên: {employee?.employeeName || 'Không xác định'}</Text>
+          </View>
+          <Text style={styles.headerCompanyName}>WAREHOUSE</Text>
         </View>
+        
+        {/* Title */}
         <View style={styles.section}>
           <Text style={styles.title}>BÁO CÁO TỒN KHO</Text>
         </View>
+        
+        {/* Bảng Dữ Liệu */}
         <View style={styles.section}>
-          <Table />
+          <Table employee={employee} />
+        </View>
+        
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text>© 2024 Công ty TNHH Thanh Trung - Tất cả các quyền được bảo lưu</Text>
         </View>
       </Page>
     </Document>

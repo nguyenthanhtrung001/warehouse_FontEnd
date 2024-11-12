@@ -77,14 +77,14 @@ const TableProduct = () => {
   const handlePriceBlur = async (productId: number) => {
     if (editingProductId === productId && editedPrice !== null) {
       try {
-        const employeeId = 123; // Đặt ID của nhân viên ở đây
+        
         const updatedProduct = products.map((product) =>
           product.id === productId ? { ...product, price: editedPrice } : product
         );
         await axiosInstance.post(`http://localhost:8888/v1/api/prices`, {
           price: editedPrice,
           productId: productId,
-          employeeId: employee?.id||1,
+          employeeId: employee?.id,
         });
         setProducts(updatedProduct);
         setEditingProductId(null);

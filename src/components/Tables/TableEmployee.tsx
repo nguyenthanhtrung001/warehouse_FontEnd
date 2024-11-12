@@ -8,6 +8,7 @@ import FormUpdateEmployee from '@/components/FormElements/employee/UpdateEmploye
 import { useRouter } from "next/navigation";
 import API_ROUTES from '@/utils/apiRoutes'; // Import API routes từ cấu hình
 import axiosInstance from '@/utils/axiosInstance';
+import { useEmployeeStore } from '@/stores/employeeStore';
 
 const TableEmployee = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -15,23 +16,30 @@ const TableEmployee = () => {
   const [showAddEmployeeForm, setShowAddEmployeeForm] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false); // Thêm trạng thái cập nhật
   const [error, setError] = useState<string | null>(null);
+  const { employee } = useEmployeeStore();
  
 
   useEffect(() => {
     const fetchEmployees = async () => {
-     
-
+      if (!employee) {
+        console.error("Employee data is not available.");
+        return; // Nếu employee không tồn tại, không gọi API
+      }
       try {
-        const response = await axiosInstance.get(API_ROUTES.EMPLOYEES);
+        if (!employee || !employee.warehouseId) return;
+        console.log("Fetching data for employee: ", employee);
+        const response = await axiosInstance.get(
+          API_ROUTES.EMPLOYEES_BY_WAREHOUSE_AND_NOT_EMPLOYEE (employee.warehouseId ,employee.id )
+        );
         setEmployees(response.data);
       } catch (error) {
         console.error("Error fetching employees: ", error);
         setError("Có lỗi xảy ra khi lấy dữ liệu nhân viên.");
       }
     };
-
+  
     fetchEmployees();
-  }, []);
+  }, [employee]); // Gọi lại API khi employee thay đổi
   const handleEmployeeClick = (employee: Employee) => {
     if (selectedEmployee && selectedEmployee.id === employee.id) {
       setSelectedEmployee(null); // Nếu nhân viên đã được chọn, click lại để ẩn thông tin chi tiết

@@ -9,6 +9,7 @@ import axiosInstance from '@/utils/axiosInstance';
 import Swal from 'sweetalert2';
 import { encrypt } from "@/utils/cryptoUtils";
 import { format } from 'date-fns';
+import { useEmployeeStore } from '@/stores/employeeStore';
 
 const TableInvoice = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -18,11 +19,15 @@ const TableInvoice = () => {
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const router = useRouter();
+  const { employee } = useEmployeeStore();
+  
   
 
   const fetchInvoices = useCallback(async () => {
+    if (!employee || !employee.warehouseId) return;
     try {
-      const response = await axiosInstance.get(API_ROUTES.INVOICES_BY_STATUS(1));
+      const response = await axiosInstance.get(API_ROUTES.INVOICES_BY_STATUS(1,employee?.warehouseId));
+      console.error("data: ", employee?.warehouseId);
       const invoiceList = response.data
         .filter((item: any) => {
           const printDate = new Date(item.printDate);
@@ -36,11 +41,11 @@ const TableInvoice = () => {
         .map((item: any) => ({
           id: item.id,
           printDate: new Date(item.printDate),
-          customerName: item.customer.customerName,
-          phoneNumber: item.customer.phoneNumber,
-          address: item.customer.address,
+          // customerName: item.customer.customerName,
+          // phoneNumber: item.customer.phoneNumber,
+          // address: item.customer.address,
           employee: item.employeeId,
-          note: item.customer.note,
+          // note: item.customer.note,
           price: item.price,
           status: item.status === 1 ? "Đã thanh toán" : "Chưa thanh toán",
         }));
@@ -48,7 +53,7 @@ const TableInvoice = () => {
     } catch (error) {
       console.error("Error fetching invoices: ", error);
     }
-  }, [startDate, endDate, searchTerm]);
+  }, [startDate, endDate, searchTerm,employee]);
 
   const handleInvoiceClick = async (invoice: any) => {
     try {

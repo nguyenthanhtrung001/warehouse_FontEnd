@@ -12,7 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import axios from '@/utils/axiosInstance';
 import Swal from 'sweetalert2'; // Import SweetAlert2
 import API_ROUTES from '@/utils/apiRoutes'; // Import API_ROUTES
-import { useEmployeeStore, initializeEmployeeFromLocalStorage } from '@/stores/employeeStore';
+import { useEmployeeStore } from '@/stores/employeeStore';
 
 
 const Home: React.FC = () => {
@@ -31,10 +31,12 @@ const Home: React.FC = () => {
   const [refreshInvoices, setRefreshInvoices] = useState<boolean>(false); // Add state for refreshing invoices
   const { employee } = useEmployeeStore();
 
+
   useEffect(() => {
     const fetchInvoices = async () => {
+      if (!employee || !employee.warehouseId) return;
       try {
-        const response = await axios.get(API_ROUTES.INVOICES_BY_STATUS(2));
+        const response = await axios.get(API_ROUTES.INVOICES_BY_STATUS(2, employee?.warehouseId));
         const data: any[] = response.data;
         setAllInvoices(data);
       } catch (error) {
@@ -43,7 +45,7 @@ const Home: React.FC = () => {
     };
 
     fetchInvoices();
-  }, [refreshInvoices]); // Add refreshInvoices as a dependency
+  }, [refreshInvoices,employee]); // Add refreshInvoices as a dependency
 
   const fetchReceiptById = async (invoiceId: string) => {
     try {
@@ -54,6 +56,8 @@ const Home: React.FC = () => {
       if (data.length > 0) {
         const firstDetail = data[0]; // Chọn chi tiết đầu tiên
         const invoice = firstDetail.invoiceId;
+        console.log(' Data test invoice:', JSON.stringify(invoice, null, 2)); // Xuất dữ liệu dưới dạng JSON
+
 
         // Cập nhật các giá trị trạng thái từ dữ liệu trả về
         setInvoice(firstDetail);
@@ -67,9 +71,11 @@ const Home: React.FC = () => {
             note: detail.note_return,
           }))
         );
+        setInvoice(invoiceId);
+        // xem xet lại khách hàng
         setSelectedCustomer(invoice.customer.id.toString());
         setCustomer(invoice.customer.customerName.toString());
-        setInvoice(invoiceId);
+       
         setNote(firstDetail.note_return || '');
         setEmployeeId(invoice.employeeId);
       }
@@ -93,6 +99,7 @@ const Home: React.FC = () => {
   };
 
   const handleComplete = async () => {
+    console.log('Invoice ID:', invoice); 
     const orderDetails = products
       .filter((product) => product.quantity > 0)
       .map((product) => ({
@@ -108,7 +115,7 @@ const Home: React.FC = () => {
       price: products
         .filter((product) => product.quantity > 0)
         .reduce((total, product) => total + product.quantity * product.price, 0),
-      employeeId: employee?.id||1,
+      employeeId: employee?.id,
       returnDetails: orderDetails,
     };
 
@@ -176,7 +183,8 @@ const Home: React.FC = () => {
             <Select
               options={allInvoices.map((invoice) => ({
                 value: invoice,
-                label: `HD000${invoice.id} - ${invoice.customer.customerName}`,
+                label: `HD000${invoice.id} - can fix KH`,
+                //label: `HD000${invoice.id} - ${invoice.customer.customerName}`,
               }))}
               onChange={handleSearchChange}
               className="w-80"

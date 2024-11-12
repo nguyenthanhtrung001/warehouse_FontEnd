@@ -8,6 +8,7 @@ import Link from 'next/link';
 import API_ROUTES from '@/utils/apiRoutes'; // Import API_ROUTES
 import Swal from 'sweetalert2';
 import { format } from 'date-fns';
+import { useEmployeeStore } from '@/stores/employeeStore';
 
 
 
@@ -18,10 +19,12 @@ const TableReceipt = () => {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const { employee } = useEmployeeStore();
 
   const fetchCheckInventories = useCallback(async () => {
+    if (!employee || !employee.warehouseId) return;
     try {
-      const response = await axios.get(API_ROUTES.INVENTORY_CHECK_SLIPS);
+      const response = await axios.get(API_ROUTES.INVENTORY_CHECK_SLIPS_WAREHOUSE(employee?.warehouseId));
       const checkInventoryList = response.data
         .filter((item: any) => {
           const checkDate = new Date(item.inventoryCheckTime);
@@ -47,7 +50,7 @@ const TableReceipt = () => {
     } catch (error) {
       console.error("Error fetching check inventories: ", error);
     }
-  }, [startDate, endDate, searchTerm]);
+  }, [startDate, endDate, searchTerm, employee]);
 
 
   const handleCheckInventoryClick = async (checkInventory: any) => {
@@ -66,7 +69,7 @@ const TableReceipt = () => {
   };
   useEffect(() => {
     fetchCheckInventories();
-  }, [startDate, endDate, searchTerm, fetchCheckInventories]); 
+  }, [employee,startDate, endDate, searchTerm, fetchCheckInventories]); 
   
   const handleCancelCheckInventory = async (id: number) => {
     const result = await Swal.fire({
@@ -107,7 +110,7 @@ const TableReceipt = () => {
       <div className="grid grid-cols-12">
           <div className="col-span-3">
             <h4 className="text-3xl font-semibold text-black dark:text-white ">
-              KIỂM KHO
+              KIỂM KHO {employee?.warehouseId}
             </h4>
           </div>
           <div className="col-span-5 flex items-center">
@@ -239,7 +242,7 @@ const TableReceipt = () => {
                   {checkInventoryDetails.map((detail) => (
 
                     <div  key={detail.batchDetail.id} className="grid grid-cols-12 gap-4 py-2 border-b border-stroke">
-                      <div className="col-span-4 px-6 text-blue-500 font-bold">MH000{detail.batchDetail.id}</div>
+                      <div className="col-span-4 px-6 text-blue-500 font-bold">MHK000{detail.batchDetail.id}</div>
                       <div className="col-span-2">{detail.batchDetail.batch.batchName}</div>
                       <div className="col-span-2">{detail.inventory}</div>
                       <div className="col-span-2">{detail.actualQuantity}</div>

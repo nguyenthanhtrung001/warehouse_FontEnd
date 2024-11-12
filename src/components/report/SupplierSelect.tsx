@@ -38,7 +38,7 @@ const SupplierSelect: React.FC<SupplierSelectProps> = ({ onSelect }) => {
   return (
     <div className="mb-4">
       <label htmlFor="supplierSelect" className="block text-lg font-medium mb-2">
-        Chọn nhà cung cấp:
+        Nhà cung cấp:
       </label>
       <select
         id="supplierSelect"

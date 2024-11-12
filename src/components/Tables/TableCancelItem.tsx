@@ -8,17 +8,20 @@ import API_ROUTES from '@/utils/apiRoutes'; // Import API routes từ cấu hìn
 import axiosInstance from '@/utils/axiosInstance';
 import Swal from 'sweetalert2';
 import { format } from 'date-fns';
+import { useEmployeeStore } from '@/stores/employeeStore';
 
 const TableReceipt = () => {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [receiptDetails, setReceiptDetails] = useState<any[]>([]);
   const router = useRouter(); // Khai báo useRouter
+  const { employee } = useEmployeeStore();
 
   useEffect(() => {
     const fetchReceipts = async () => {
+      if (!employee || !employee.warehouseId) return;
       try {
-        const response = await axiosInstance.get(API_ROUTES.CANCEL_DELIVERY_NOTE);
+        const response = await axiosInstance.get(API_ROUTES.CANCEL_DELIVERY_NOTE_WAREHOUSE(employee?.warehouseId));
         const receiptList = await Promise.all(response.data.map(async (item: any) => {
           return {
             id: item.id,
@@ -36,7 +39,7 @@ const TableReceipt = () => {
     };
 
     fetchReceipts();
-  }, []);
+  }, [employee]);
 
   const handleReceiptClick = async (receipt: Receipt) => {
     try {

@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import axiosInstance from '@/utils/axiosInstance';
 import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
+import { useEmployeeStore } from '@/stores/employeeStore';
+import API_ROUTES from '@/utils/apiRoutes';
 
 interface Product {
   productId: number;
@@ -19,15 +21,17 @@ const ProductQuantityPieChart: React.FC<ProductQuantityPieChartProps> = ({ month
   const [data, setData] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const { employee } = useEmployeeStore();
+  const warehouseId = employee?.warehouseId;
 
   useEffect(() => {
     const fetchData = async () => {
+      // Chờ employee và warehouseId sẵn sàng
+      if (!employee || !warehouseId) return;
+  
       try {
         const response = await axiosInstance.get<Product[]>(
-          'http://localhost:8888/v1/api/invoice-details/products/quantities/by-month-year',
-          {
-            params: { month, year }
-          }
+          API_ROUTES.PRODUCT_QUANTITIES_BY_MONTH_YEAR(month, year, warehouseId)
         );
         setData(response.data); // Cập nhật dữ liệu
         setLoading(false); // Dữ liệu đã tải
@@ -37,11 +41,14 @@ const ProductQuantityPieChart: React.FC<ProductQuantityPieChartProps> = ({ month
         setLoading(false); // Dữ liệu đã tải dù có lỗi
       }
     };
-
+  
     fetchData();
-  }, [month, year]);
+  }, [month, year, warehouseId, employee]);
+  
+  
 
-  if (loading) return <p>Đang tải dữ liệu...</p>;
+
+  if (loading) return <p>Đang tải dữ liệu..</p>;
   if (error) return <p>{error}</p>;
 
   const chartOptions: ApexOptions = {
@@ -50,7 +57,7 @@ const ProductQuantityPieChart: React.FC<ProductQuantityPieChartProps> = ({ month
     },
     labels: data.map(item => `MH000${item.productId}`),
     title: {
-      text: `Thống kê sản phẩm bán ra tháng ${month} năm ${year}`,
+      text: `Thống kê sản phẩm bán ra tháng ${month} năm ${year} ${employee?.warehouseId}`,
       align: 'left'
       
     },

@@ -13,5 +13,6 @@ export interface Employee {
     email: string;
     account_id: number | null;
     status: number;
+    warehouseId:number;
   }
   

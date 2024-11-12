@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
-import axiosInstance from '@/utils/axiosInstance'; // Import axios instance
-import '@/utils/fontSetup'; // Import file đăng ký font
-import {formatCurrency} from '@/utils/formatCurrency';
+import axiosInstance from '@/utils/axiosInstance';
+import '@/utils/fontSetup';
+import { formatCurrency } from '@/utils/formatCurrency';
+import { Employee } from '@/types/employee';
 
 // Định nghĩa kiểu dữ liệu cho sản phẩm
 interface Product {
@@ -14,60 +15,82 @@ interface Product {
   price: number;
 }
 
-// Định nghĩa các kiểu dáng cho bảng
+// Định nghĩa các màu sắc và kiểu dáng cho bảng
+const colors = {
+  headerBackground: '#4f81bd',
+  headerText: '#ffffff',
+  rowBackground: '#f9f9f9',
+  rowAltBackground: '#eaeaea',
+  summaryBackground: '#333333',
+  summaryText: '#ffffff',
+  cellBorder: '#dddddd',
+};
+
 const styles = StyleSheet.create({
   table: {
-    margin: '10px 0',
-    borderWidth: 1,
-    borderColor: '#000',
-    borderStyle: 'solid',
-    borderRadius: 4,
+    marginVertical: 10,
     width: '100%',
   },
   tableRow: {
     flexDirection: 'row',
   },
   tableCell: {
-    borderStyle: 'solid',
-    borderColor: '#000',
-    borderWidth: 1,
-    padding: 5,
-    fontSize: 12,
-    fontFamily: 'Roboto', // Sử dụng font đã đăng ký
+    padding: 8,
+    fontSize: 11,
+    fontFamily: 'Roboto',
     textAlign: 'center',
+    borderBottomColor: colors.cellBorder,
+    borderBottomWidth: 1,
     flex: 1,
   },
   tableHeaderCell: {
-    borderStyle: 'solid',
-    borderColor: '#000',
-    borderWidth: 1,
-    padding: 5,
+    padding: 10,
     fontSize: 12,
-    fontFamily: 'Roboto', // Sử dụng font đã đăng ký
+    fontFamily: 'Roboto',
     fontWeight: 'bold',
-    backgroundColor: '#3c50e0', // Màu nền xanh dương cho header
-    color: '#ffffff', // Màu chữ trắng cho header
+    backgroundColor: colors.headerBackground,
+    color: colors.headerText,
     textAlign: 'center',
+    borderBottomColor: colors.cellBorder,
+    borderBottomWidth: 1,
     flex: 1,
   },
   summaryRow: {
     flexDirection: 'row',
-    backgroundColor: '#f0ad4e', // Màu nền cho hàng tổng kết
+    backgroundColor: colors.summaryBackground,
+    paddingVertical: 6,
+  },
+  summaryCell: {
+    fontSize: 11,
+    fontFamily: 'Roboto',
+    color: colors.summaryText,
+    textAlign: 'center',
+    flex: 1,
+    fontWeight: 'bold',
   },
 });
 
 // Tạo component bảng dữ liệu
 interface TableProps {
-  idSupplier: number; // Thêm idSupplier vào props
+  idSupplier: number;
+  employee: Employee | null;
+  year: number; // Nhận vào năm
+  month: number; // Nhận vào tháng
 }
 
-const Table: React.FC<TableProps> = ({ idSupplier }) => {
+const Table: React.FC<TableProps> = ({ idSupplier, employee, year, month }) => {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axiosInstance.get<Product[]>(`http://localhost:8888/v1/api/receipts/supplier/${idSupplier}`);
+        const response = await axiosInstance.get<Product[]>(`http://localhost:8888/v1/api/receipts/supplier/${idSupplier}`, {
+          params: {
+            warehouseId: employee?.warehouseId,
+            year,
+            month
+          }
+        });
         setProducts(response.data);
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -75,14 +98,13 @@ const Table: React.FC<TableProps> = ({ idSupplier }) => {
     };
 
     fetchProducts();
-  }, [idSupplier]); // Thêm idSupplier vào dependency array
+  }, [idSupplier, employee, year, month]);
 
   // Tính tổng số lượng và đếm số lượng mặt hàng
   const totalQuantityReceiptDetail = products.reduce((acc, product) => acc + product.quantityReceiptDetail, 0);
   const totalQuantityDeliveryDetail = products.reduce((acc, product) => acc + product.quantityDeliveryDetail, 0);
-  const totalPurchasePrice = products.reduce((acc, product) => acc + product.purchasePrice, 0);
-  const totalPrice = products.reduce((acc, product) => acc + product.price, 0);
-  const totalItems = products.length;
+  const totalPurchaseValue = products.reduce((acc, product) => acc + (product.purchasePrice * product.quantityReceiptDetail), 0);
+  const totalDeliveryValue = products.reduce((acc, product) => acc + (product.price * product.quantityDeliveryDetail), 0);
 
   return (
     <View style={styles.table}>
@@ -96,29 +118,33 @@ const Table: React.FC<TableProps> = ({ idSupplier }) => {
         <Text style={styles.tableHeaderCell}>Giá trị trả</Text>
       </View>
 
-      {/* Hàng tổng kết */}
-      <View style={styles.summaryRow}>
-        <Text style={styles.tableCell}>Tổng cộng</Text>
-        <Text style={styles.tableCell}></Text>
-        <Text style={styles.tableCell}>{totalQuantityReceiptDetail}</Text>
-        <Text style={styles.tableCell}>{formatCurrency(totalPurchasePrice)}</Text>
-        <Text style={styles.tableCell}>{totalQuantityDeliveryDetail}</Text>
-        <Text style={styles.tableCell}>{formatCurrency(totalPrice)}</Text>
-      </View>
-      
       {/* Dữ liệu */}
       {products.map((product, index) => (
-        <View style={styles.tableRow} key={product.idProduct}>
+        <View
+          style={[
+            styles.tableRow,
+            { backgroundColor: index % 2 === 0 ? colors.rowBackground : colors.rowAltBackground },
+          ]}
+          key={product.idProduct}
+        >
           <Text style={styles.tableCell}>{index + 1}</Text>
           <Text style={styles.tableCell}>{product.productName}</Text>
           <Text style={styles.tableCell}>{product.quantityReceiptDetail}</Text>
-          <Text style={styles.tableCell}>{formatCurrency(product.purchasePrice*product.quantityReceiptDetail)}</Text>
+          <Text style={styles.tableCell}>{formatCurrency(product.purchasePrice * product.quantityReceiptDetail)}</Text>
           <Text style={styles.tableCell}>{product.quantityDeliveryDetail}</Text>
-          <Text style={styles.tableCell}>{formatCurrency(product.price* product.quantityDeliveryDetail)}</Text>
+          <Text style={styles.tableCell}>{formatCurrency(product.price * product.quantityDeliveryDetail)}</Text>
         </View>
       ))}
 
-      
+      {/* Hàng tổng kết */}
+      <View style={styles.summaryRow}>
+        <Text style={styles.summaryCell}>Tổng cộng</Text>
+        <Text style={styles.summaryCell}></Text>
+        <Text style={styles.summaryCell}>{totalQuantityReceiptDetail}</Text>
+        <Text style={styles.summaryCell}>{formatCurrency(totalPurchaseValue)}</Text>
+        <Text style={styles.summaryCell}>{totalQuantityDeliveryDetail}</Text>
+        <Text style={styles.summaryCell}>{formatCurrency(totalDeliveryValue)}</Text>
+      </View>
     </View>
   );
 };

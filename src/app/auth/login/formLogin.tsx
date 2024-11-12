@@ -40,17 +40,20 @@ const SignIn: React.FC = () => {
         console.log("Token:", data.result.token);
         Cookies.set("authToken", data.result.token, { path: "/" });
 
+        // Lấy thông tin role người dùng
         const userRole = await fetchUserInfo(data.result.token);
         const userName = await fetchUserName();
 
-        if (userRole) {
-          if (userRole === 'ADMIN') {
-            router.push("/doashboard");
-          } else {
-            router.push("/");
-          }
+        // Kiểm tra role và điều hướng trang phù hợp
+        if (userRole === 'ADMIN') {
+          router.push("/admin/dashboard-admin");
+        } else if (userRole === 'MANAGER') {
+          router.push("/dashboard");
+        } else {
+          router.push("/invoice");
         }
 
+        // Lấy thông tin employee nếu cần
         const employee = await fetchEmployeeByAccountId(userName);
       } else {
         setError(data.message || "Đăng nhập thất bại");

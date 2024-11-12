@@ -33,8 +33,9 @@ const UpdateReceipt: React.FC = () => {
 
   useEffect(() => {
     const fetchReceipts = async () => {
+      if (!employee || !employee.warehouseId) return;
       try {
-        const response = await axiosInstance.get(API_ROUTES.RECEIPTS_FOR_RETURN);
+        const response = await axiosInstance.get(API_ROUTES.RECEIPTS_FOR_RETURN(employee?.warehouseId));
         const data: any[] = response.data;
         setAllReceipts(data);
       } catch (error) {
@@ -127,9 +128,10 @@ const UpdateReceipt: React.FC = () => {
         const data = {
           receipt: receiptID,
           price: validProducts.reduce((total, product) => total + product.quantity * product.price, 0),
-          employeeId: employee?.id||1,
+          employeeId: employee?.id,
           import_Export_Details: receiptDetails,
           note: note,
+          warehouseId:  employee?.warehouseId,
         };
   
         console.log('Dữ liệu gửi đi:', JSON.stringify(data));

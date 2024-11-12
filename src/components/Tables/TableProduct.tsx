@@ -10,6 +10,7 @@ import axiosInstance from '@/utils/axiosInstance';
 import UpdateProductForm from '@/components/FormElements/product/UpdateProductForm';
 import Image from 'next/image';
 import Swal from 'sweetalert2';
+import { useEmployeeStore } from '@/stores/employeeStore';
 
 
 const TableProduct = () => {
@@ -19,10 +20,15 @@ const TableProduct = () => {
   const [showAddProductForm, setShowAddProductForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [showUpdateProductForm, setShowUpdateProductForm] = useState(false);
+  const { employee } = useEmployeeStore();
+  // Thêm state phân trang
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4; // Số sản phẩm mỗi trang
 
   const fetchProducts = async () => {
+    if (!employee || !employee.warehouseId) return;
     try {
-      const response = await axiosInstance.get(API_ROUTES.API_PRODUCTS_HAS_LOCATION_BATCH);
+      const response = await axiosInstance.get(API_ROUTES.API_PRODUCTS_HAS_LOCATION_BATCH(employee.warehouseId));
       const productList = await Promise.all(
         response.data.map(async (item: any) => ({
           id: item.id,
@@ -127,6 +133,18 @@ const TableProduct = () => {
         'error'
       );
     }
+  };
+  // Tính toán các sản phẩm cần hiển thị trên trang hiện tại
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Tổng số trang
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
+  // Hàm chuyển trang
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
   };
 
   return (
@@ -287,8 +305,32 @@ const TableProduct = () => {
               </div>
             </div>
           )}
+
+         
         </React.Fragment>
       ))}
+        {/* Phân trang */}
+        {totalPages > 1 && (
+        <div className="flex justify-center py-4">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-4 py-2 mx-1 bg-blue-600 text-white rounded disabled:bg-gray-400"
+          >
+            Trước111
+          </button>
+          <span className="px-4 py-2 mx-1">
+            Trang {currentPage} / {totalPages}
+          </span>
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 mx-1 bg-blue-600 text-white rounded disabled:bg-gray-400"
+          >
+            Sau
+          </button>
+        </div>
+      )}
     </div>
   );
 };
