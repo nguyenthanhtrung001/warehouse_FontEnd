@@ -11,6 +11,7 @@ import * as yup from 'yup';
 import { FaTrash, FaLock, FaUnlock, FaSearch } from 'react-icons/fa';
 import LockResetIcon from '@mui/icons-material/LockReset';
 import Swal from 'sweetalert2';
+import { useEmployeeStore } from "@/stores/employeeStore";
 
 interface Role {
   name: string;
@@ -36,6 +37,7 @@ const AccountManagement = () => {
   const [page, setPage] = useState<number>(0);
   const [rowsPerPage, setRowsPerPage] = useState<number>(5);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const { employee } = useEmployeeStore();
 
   const { control, handleSubmit, reset } = useForm({
     defaultValues: {
@@ -46,9 +48,11 @@ const AccountManagement = () => {
   });
 
   const fetchUsers = async () => {
+    if (!employee || !employee.warehouseId) return;
     try {
-      const usersResponse = await axios.get(`${API_BASE_URL}/users/employee`);
+      const usersResponse = await axios.get(`${API_BASE_URL}/users/employee/warehouse/${employee.warehouseId}`);
       if (usersResponse.data.code === 1000) {
+        console.log("Data:",  usersResponse);
         setUsers(usersResponse.data.result);
         setFilteredUsers(usersResponse.data.result);
       }
@@ -189,7 +193,7 @@ const AccountManagement = () => {
     <Box sx={{ padding: '32px', backgroundColor: '#f9f9f9', minHeight: '100vh' }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#4a4a4a' }}>
-          Quản lý tài khoản
+          Quản lý tài khoản 
         </Typography>
       </Box>
 

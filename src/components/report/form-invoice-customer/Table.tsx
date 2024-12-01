@@ -1,11 +1,11 @@
+// src/components/Table.tsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
-import axiosInstance from '@/utils/axiosInstance'; // Import axios instance
-import '@/utils/fontSetup'; // Import font setup file
+import axiosInstance from '@/utils/axiosInstance';
+import '@/utils/fontSetup';
 import { formatCurrency } from '@/utils/formatCurrency';
-import { format } from 'date-fns'; // Import format from date-fns
+import { format } from 'date-fns';
 
-// Định nghĩa kiểu dữ liệu cho sản phẩm
 interface Product {
   id: number;
   productId: number;
@@ -32,7 +32,6 @@ interface Product {
   note_return: string;
 }
 
-// Định nghĩa các kiểu dáng cho bảng
 const styles = StyleSheet.create({
   table: {
     margin: '10px 0',
@@ -41,6 +40,7 @@ const styles = StyleSheet.create({
   tableRow: {
     flexDirection: 'row',
     paddingVertical: 5,
+    backgroundColor: '#f9f9f9', // Nền xám nhạt cho hàng dữ liệu
   },
   tableCell: {
     fontSize: 12,
@@ -48,40 +48,48 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     flex: 1,
     paddingVertical: 5,
+    color: '#333', // Màu chữ đậm cho nội dung
   },
   tableHeaderCell: {
     fontSize: 12,
     fontFamily: 'Roboto',
     fontWeight: 'bold',
-    backgroundColor: '#3c50e0',
-    color: '#ffffff',
+    backgroundColor: '#1e3a8a', // Màu xanh đậm cho tiêu đề
+    color: '#ffffff', // Màu trắng cho chữ tiêu đề
     textAlign: 'center',
     flex: 1,
     paddingVertical: 5,
   },
   summaryRow: {
     flexDirection: 'row',
-    backgroundColor: '#f0ad4e',
+    backgroundColor: '#2f855a', // Màu xanh lá đậm cho hàng tổng cộng
     paddingVertical: 5,
+  },
+  summaryCell: {
+    fontSize: 12,
+    fontFamily: 'Roboto',
+    textAlign: 'center',
+    flex: 1,
+    color: '#ffffff', // Màu trắng cho chữ trong hàng tổng cộng
   },
   customerInfo: {
     marginBottom: 10,
     fontSize: 12,
     fontFamily: 'Roboto',
+    color: '#333', // Màu đậm cho thông tin khách hàng
   },
   invoiceDate: {
     fontSize: 12,
     fontFamily: 'Roboto',
+    color: '#555', // Màu xám trung bình cho ngày hóa đơn
     marginBottom: 10,
   },
 });
 
-// Định nghĩa kiểu dữ liệu cho props
 interface TableProps {
   orderId: string | null;
 }
 
-// Tạo component bảng dữ liệu
 const Table: React.FC<TableProps> = ({ orderId }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [customerInfo, setCustomerInfo] = useState<{
@@ -132,12 +140,6 @@ const Table: React.FC<TableProps> = ({ orderId }) => {
 
   return (
     <View>
-      <Text style={styles.invoiceDate}>Ngày đặt: {invoiceDate}</Text>
-
-      <Text style={styles.customerInfo}>Tên khách hàng: {customerInfo.customerName}</Text>
-      <Text style={styles.customerInfo}>Số điện thoại: {customerInfo.phoneNumber}</Text>
-      <Text style={styles.customerInfo}>Địa chỉ: {customerInfo.address}</Text>
-      
       <View style={styles.table}>
         {/* Header */}
         <View style={styles.tableRow}>
@@ -161,11 +163,11 @@ const Table: React.FC<TableProps> = ({ orderId }) => {
 
         {/* Hàng tổng kết */}
         <View style={styles.summaryRow}>
-          <Text style={styles.tableCell}>Tổng cộng</Text>
-          <Text style={styles.tableCell}>{totalItems} mặt hàng</Text>
-          <Text style={styles.tableCell}>{totalQuantity}</Text>
-          <Text style={styles.tableCell}></Text>
-          <Text style={styles.tableCell}>{formatCurrency(totalPrice)}</Text>
+          <Text style={styles.summaryCell}>Tổng cộng</Text>
+          <Text style={styles.summaryCell}>{totalItems} mặt hàng</Text>
+          <Text style={styles.summaryCell}>{totalQuantity}</Text>
+          <Text style={styles.summaryCell}></Text>
+          <Text style={styles.summaryCell}>{formatCurrency(totalPrice)}</Text>
         </View>
       </View>
     </View>

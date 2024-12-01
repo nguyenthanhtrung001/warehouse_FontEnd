@@ -2,12 +2,7 @@ import TableSupplier from "@/components/Tables/TableSupplier";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import { Metadata } from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import AddProductModal from "@/components/FormElements/product/AddProductForm";
-import AddReceiptForm from "@/components/FormElements/Receipt/AddReceiptForm";
 import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Import CSS cho react-toastify
-
-
 
 
 export const metadata: Metadata = {

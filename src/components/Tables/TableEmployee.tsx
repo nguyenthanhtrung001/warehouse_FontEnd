@@ -1,66 +1,174 @@
 "use client";
 // src/components/TableEmployee.tsx
-import React, { useEffect, useState } from 'react';
-import { Employee } from '@/types/employee';
-import Modal from '@/components/Modal/Modal';
-import FormAddEmployee from '@/components/FormElements/employee/AddEmployeeForm';
-import FormUpdateEmployee from '@/components/FormElements/employee/UpdateEmployeeForm';
-import { useRouter } from "next/navigation";
-import API_ROUTES from '@/utils/apiRoutes'; // Import API routes từ cấu hình
-import axiosInstance from '@/utils/axiosInstance';
-import { useEmployeeStore } from '@/stores/employeeStore';
+import React, { useEffect, useState } from "react";
+import { Employee } from "@/types/employee";
+import Modal from "@/components/Modal/Modal";
+import FormAddEmployee from "@/components/FormElements/employee/AddEmployeeForm";
+import FormUpdateEmployee from "@/components/FormElements/employee/UpdateEmployeeForm";
+import API_ROUTES from "@/utils/apiRoutes";
+import axiosInstance from "@/utils/axiosInstance";
+import { useEmployeeStore } from "@/stores/employeeStore";
+import Swal from "sweetalert2";
 
 const TableEmployee = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+    null,
+  );
   const [showAddEmployeeForm, setShowAddEmployeeForm] = useState(false);
-  const [isUpdate, setIsUpdate] = useState(false); // Thêm trạng thái cập nhật
+  const [isUpdate, setIsUpdate] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { employee } = useEmployeeStore();
- 
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const employeesPerPage = 5;
+
+  const fetchEmployees = async () => {
+    if (!employee) {
+      console.error("Employee data is not available.");
+      return;
+    }
+  if (!employee.position.toLowerCase().includes("quản lý")) 
+    {
+      employee.warehouseId = 0 ;
+    }
+    try {
+      console.log("nha vien kho: ", employee.warehouseId)
+      const response = await axiosInstance.get(
+        API_ROUTES.EMPLOYEES_BY_WAREHOUSE_AND_NOT_EMPLOYEE(
+          employee.warehouseId,
+          employee.id
+        )
+      );
+      let filteredEmployees = response.data;
+  
+      // Apply flexible filters based on employee position
+      const position = employee.position.toLowerCase();
+      console.log("nhan vien:", position);
+      if (position.includes("quản lý")) {
+        // Only include "nhân viên" positions
+        filteredEmployees = filteredEmployees.filter(
+          (emp: { position: string }) => emp.position.toLowerCase().includes("nhân viên")
+        );
+      } else if (position.includes("admin")) {
+        // Exclude "admin" and "nhân viên" positions
+        filteredEmployees = filteredEmployees.filter(
+          (emp: { position: string }) => emp.position.toLowerCase().includes("quản lý")
+        );
+      }
+  
+      console.log("Filtered data:", filteredEmployees);
+      setEmployees(filteredEmployees);
+    } catch (error) {
+      console.error("Error fetching employees: ", error);
+      setError("Có lỗi xảy ra khi lấy dữ liệu nhân viên.");
+    }
+  };
+  
+  
 
   useEffect(() => {
-    const fetchEmployees = async () => {
-      if (!employee) {
-        console.error("Employee data is not available.");
-        return; // Nếu employee không tồn tại, không gọi API
-      }
-      try {
-        if (!employee || !employee.warehouseId) return;
-        console.log("Fetching data for employee: ", employee);
-        const response = await axiosInstance.get(
-          API_ROUTES.EMPLOYEES_BY_WAREHOUSE_AND_NOT_EMPLOYEE (employee.warehouseId ,employee.id )
-        );
-        setEmployees(response.data);
-      } catch (error) {
-        console.error("Error fetching employees: ", error);
-        setError("Có lỗi xảy ra khi lấy dữ liệu nhân viên.");
-      }
-    };
-  
     fetchEmployees();
-  }, [employee]); // Gọi lại API khi employee thay đổi
+  }, [employee]);
+
   const handleEmployeeClick = (employee: Employee) => {
-    if (selectedEmployee && selectedEmployee.id === employee.id) {
-      setSelectedEmployee(null); // Nếu nhân viên đã được chọn, click lại để ẩn thông tin chi tiết
-    } else {
-      setSelectedEmployee(employee);
-    }
+    setSelectedEmployee((prev) =>
+      prev && prev.id === employee.id ? null : employee,
+    );
   };
 
   const handleCloseModal = () => {
     setShowAddEmployeeForm(false);
-    setIsUpdate(false); // Reset trạng thái cập nhật khi đóng modal
+    setIsUpdate(false);
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(amount);
   };
 
   const handleUpdateClick = (employee: Employee) => {
     setSelectedEmployee(employee);
     setShowAddEmployeeForm(true);
-    setIsUpdate(true); // Chuyển sang trạng thái cập nhật
+    setIsUpdate(true);
+  };
+
+  // Calculate employees for current page
+  const indexOfLastEmployee = currentPage * employeesPerPage;
+  const indexOfFirstEmployee = indexOfLastEmployee - employeesPerPage;
+  const currentEmployees = employees.slice(
+    indexOfFirstEmployee,
+    indexOfLastEmployee,
+  );
+
+  // Pagination controls
+  const totalPages = Math.ceil(employees.length / employeesPerPage);
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  // Hàm tạo tài khoản
+
+  const createAccount = async (employeeId: number) => {
+   
+    // Hiển thị hộp thoại xác nhận
+    const result = await Swal.fire({
+      title: "Xác nhận",
+      text: "Bạn có chắc chắn muốn tạo tài khoản cho nhân viên này?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Đồng ý",
+      cancelButtonText: "Hủy",
+    });
+
+    // Nếu người dùng xác nhận, tiếp tục gọi API tạo tài khoản
+    if (result.isConfirmed) {
+      try {
+        const response = await axiosInstance.post(
+          "http://localhost:8888/v1/api/employees/create-account",
+          null,
+          {
+            params: {
+              employeeId: employeeId,
+            },
+          },
+        );
+
+        console.log("Account created:", response.data);
+
+        // Hiển thị thông báo thành công bằng SweetAlert2
+        Swal.fire({
+          icon: "success",
+          title: "Thành công",
+          text: "Tài khoản đã được tạo thành công!",
+          confirmButtonText: "OK",
+        });
+
+        // Tải lại dữ liệu sau khi tạo tài khoản
+        fetchEmployees();
+      } catch (error) {
+        console.error("Error creating account:", error);
+
+        // Hiển thị thông báo lỗi bằng SweetAlert2
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: "Có lỗi xảy ra khi tạo tài khoản.",
+          confirmButtonText: "Thử lại",
+        });
+      }
+    }
   };
 
   return (
@@ -74,71 +182,82 @@ const TableEmployee = () => {
           </div>
           <div className="col-span-3 px-2 font-bold">
             <button
-              className="bg-green-600 text-white px-4 py-2 rounded"
-              onClick={() => { 
+              className="rounded bg-green-600 px-4 py-2 text-white"
+              onClick={() => {
                 setShowAddEmployeeForm(true);
-                setIsUpdate(false); // Đảm bảo trạng thái không phải là cập nhật khi thêm mới
+                setIsUpdate(false);
               }}
             >
               Thêm mới
             </button>
-            <button className="bg-green-600 text-white px-4 py-2 rounded ml-2">In PDF</button>
+            <button className="ml-2 rounded bg-green-600 px-4 py-2 text-white">
+              In PDF
+            </button>
           </div>
-        </div> 
+        </div>
       </div>
 
-      {/* Modal */}
-      <Modal 
-        isVisible={showAddEmployeeForm} 
-        onClose={handleCloseModal} 
+      <Modal
+        isVisible={showAddEmployeeForm}
+        onClose={handleCloseModal}
         title={isUpdate ? "CẬP NHẬT THÔNG TIN" : "THÊM NHÂN VIÊN"}
       >
         {isUpdate ? (
           <FormUpdateEmployee employee={selectedEmployee} isUpdate={isUpdate} />
         ) : (
-          <FormAddEmployee employee ={selectedEmployee} isUpdate={isUpdate} />
+          <FormAddEmployee />
         )}
       </Modal>
 
       <div className="container mx-auto">
-        <div className="grid grid-cols-12 gap-4 border-t border-stroke px-4 py-4.5 bg-blue-700 font-bole text-white font-bold ">
-          <div className="col-span-2 ">ID</div>
-          <div className="col-span-2 ">Tên nhân viên</div>
-          <div className="col-span-2 ">Chức vụ</div>
-          <div className="col-span-2 ">Số điện thoại</div>
-          <div className="col-span-2 ">Email</div>
-          <div className="col-span-2 ">Hành động</div>
+        <div className="grid grid-cols-12 gap-4 border-t border-stroke bg-blue-700 px-4 py-4.5 font-bold text-white">
+          <div className="col-span-2">ID</div>
+          <div className="col-span-2">Tên nhân viên</div>
+          <div className="col-span-2">Chức vụ</div>
+          <div className="col-span-2">Số điện thoại</div>
+          <div className="col-span-2">Mã Kho</div>
+          <div className="col-span-2">Hành động </div>
         </div>
       </div>
 
-      {employees.map((employee) => (
+      {currentEmployees.map((employee) => (
         <React.Fragment key={employee.id}>
-          <div className="container mx-auto px-4 mb-1 border-b border-gray-200 p-1 text-black">
+          <div className="border-gray-200 container mx-auto mb-1 border-b p-1 px-4 text-black">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-2">
-              <p className="text-sm text-black dark:text-white font-bold text-blue-500 ml-2">NV000{employee.id}</p>
+                <p className="ml-2 text-sm font-bold text-black text-blue-500 dark:text-white">
+                  NV000{employee.id}
+                </p>
               </div>
               <div className="col-span-2">
-                <p className="text-sm text-black dark:text-white">{employee.employeeName}</p>
+                <p className="text-sm text-black dark:text-white">
+                  {employee.employeeName}
+                </p>
               </div>
               <div className="col-span-2">
-                <p className="text-sm text-black dark:text-white">{employee.position}</p>
+                <p className="text-sm text-black dark:text-white">
+                  {employee.position}
+                </p>
               </div>
               <div className="col-span-2">
-                <p className="text-sm text-black dark:text-white">{employee.phoneNumber}</p>
+                <p className="text-sm text-black dark:text-white">
+                  {employee.phoneNumber}
+                </p>
               </div>
               <div className="col-span-2">
-                <p className="text-sm text-black dark:text-white">{employee.email}</p>
+                <p className="text-sm text-black dark:text-white">
+                  K000{employee.warehouseId}
+                </p>
               </div>
               <div className="col-span-2">
                 <button
-                  className="bg-blue-500 text-white px-4 py-2 rounded"
+                  className="rounded bg-blue-500 px-4 py-2 text-white"
                   onClick={() => handleEmployeeClick(employee)}
                 >
                   Xem
                 </button>
                 <button
-                  className="bg-yellow-500 text-white px-4 py-2 rounded ml-2"
+                  className="ml-2 rounded bg-yellow-500 px-4 py-2 text-white"
                   onClick={() => handleUpdateClick(employee)}
                 >
                   Cập nhật
@@ -148,26 +267,65 @@ const TableEmployee = () => {
           </div>
 
           {selectedEmployee && selectedEmployee.id === employee.id && (
-            <div className="px-4 py-4.5 border  border-blue-700 bg-blue-50 dark:border-strokedark md:px-6 2xl:px-7.5 text-black">
+            <div className="border border-blue-700 bg-blue-50 px-4 py-4.5 text-black dark:border-strokedark md:px-6 2xl:px-7.5">
+              {/* Additional employee details */}
               <div className="container mx-auto px-4">
                 <div className="grid grid-cols-12 gap-4">
                   <div className="col-span-5">
-                    <label className="mb-3 block p-2 font-bold text-blue-700 dark:text-white text-2xl">
+                    <label className="mb-3 block p-2 text-2xl font-bold text-blue-700 dark:text-white">
                       Nhân viên: {employee.employeeName}
                     </label>
                     <ul className="list-none p-0">
-                    <li className="mb-2 border-b border-gray-300 pb-2 ">ID: <span className="font-bold text-blue-700 ml-2">NV000{employee.id}</span></li>
-                      <li className="mb-2 border-b border-gray-300 pb-2">Chức vụ: <span className="font-bold ml-2">{employee.position}</span></li>
-                      <li className="mb-2 border-b border-gray-300 pb-2">Lương cơ bản: <span className="font-bold ml-2">{formatCurrency(employee.basicSalary)}</span></li>
-                      <li className="mb-2 border-b border-gray-300 pb-2">Giới tính: <span className="font-bold ml-2">{employee.gender}</span></li>
-                      </ul>
+                      <li className="border-gray-300 mb-2 border-b pb-2 ">
+                        ID:{" "}
+                        <span className="ml-2 font-bold text-blue-700">
+                          NV000{employee.id}
+                        </span>
+                      </li>
+                      <li className="border-gray-300 mb-2 border-b pb-2">
+                        Chức vụ:{" "}
+                        <span className="ml-2 font-bold">
+                          {employee.position}
+                        </span>
+                      </li>
+                      <li className="border-gray-300 mb-2 border-b pb-2">
+                        Lương cơ bản:{" "}
+                        <span className="ml-2 font-bold">
+                          {formatCurrency(employee.basicSalary)}
+                        </span>
+                      </li>
+                      <li className="border-gray-300 mb-2 border-b pb-2">
+                        Giới tính:{" "}
+                        <span className="ml-2 font-bold">
+                          {employee.gender}
+                        </span>
+                      </li>
+                    </ul>
                   </div>
-                  <div className="col-span-5 p-2 mt-13">
+                  <div className="col-span-5 mt-13 p-2">
                     <ul className="list-none p-0">
-                     <li className="mb-2 border-b border-gray-300 pb-2">Ngày sinh: <span className="font-bold ml-2">{employee.dateOfBirth}</span></li>
-                      <li className="mb-2 border-b border-gray-300 pb-2">Ngày vào: <span className="font-bold ml-2">{employee.dateJoined}</span></li>
-                      <li className="mb-2 border-b border-gray-300 pb-2">Địa chỉ: <span className="font-bold ml-2">{employee.address}</span></li>
-                      <li className="mb-2 border-b border-gray-300 pb-2">Email: <span className="font-bold ml-2">{employee.email}</span></li>
+                      <li className="border-gray-300 mb-2 border-b pb-2">
+                        Ngày sinh:{" "}
+                        <span className="ml-2 font-bold">
+                          {employee.dateOfBirth}
+                        </span>
+                      </li>
+                      <li className="border-gray-300 mb-2 border-b pb-2">
+                        Ngày vào:{" "}
+                        <span className="ml-2 font-bold">
+                          {employee.dateJoined}
+                        </span>
+                      </li>
+                      <li className="border-gray-300 mb-2 border-b pb-2">
+                        Địa chỉ:{" "}
+                        <span className="ml-2 font-bold">
+                          {employee.address}
+                        </span>
+                      </li>
+                      <li className="border-gray-300 mb-2 border-b pb-2">
+                        Email:{" "}
+                        <span className="ml-2 font-bold">{employee.email}</span>
+                      </li>
                     </ul>
                   </div>
                   <div className="col-span-2 py-8">
@@ -177,22 +335,26 @@ const TableEmployee = () => {
                       </label>
                       <textarea
                         rows={1}
-                        className=" text-center w-full rounded-lg border-[1.5px] border-primary bg-transparent px-5 py-3 text-green-700 font-bold outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:bg-form-input dark:text-white"
+                        className=" w-full rounded-lg border-[1.5px] border-primary bg-transparent px-5 py-3 text-center font-bold text-green-700 outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:bg-form-input dark:text-white"
                         disabled
-                      >{employee.status === 1 ? 'Hoạt động' : 'Ngừng hoạt động'}</textarea>
+                      >
+                        {employee.status === 1
+                          ? "Hoạt động"
+                          : "Ngừng hoạt động"}
+                      </textarea>
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-12 mt-3 ">
+                <div className="mt-3 grid grid-cols-12 ">
                   <div className="col-span-6"></div>
                   <div className="col-span-6 flex justify-end">
-                    
-                    {employee.account_id ? (
-                      <button className="bg-red text-white px-4 py-2 rounded ">
-                        Khóa tài khoản
-                      </button>
+                    {employee.accountId ? (
+                      ""
                     ) : (
-                      <button className="bg-green-600 text-white px-4 py-2 rounded ">
+                      <button
+                        className="rounded bg-green-600 px-4 py-2 text-white"
+                        onClick={() => createAccount(employee.id)}
+                      >
                         Tạo tài khoản
                       </button>
                     )}
@@ -203,6 +365,33 @@ const TableEmployee = () => {
           )}
         </React.Fragment>
       ))}
+
+      {/* Pagination Controls */}
+      <div className="mt-4 flex justify-center">
+        <button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+          className="bg-gray-200 mx-1 rounded px-3 py-1"
+        >
+          Trước
+        </button>
+        {[...Array(totalPages)].map((_, index) => (
+          <button
+            key={index}
+            onClick={() => handlePageChange(index + 1)}
+            className={`mx-1 rounded px-3 py-1 ${currentPage === index + 1 ? "bg-blue-600 text-white" : "bg-gray-200"}`}
+          >
+            {index + 1}
+          </button>
+        ))}
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+          className="bg-gray-200 mx-1 rounded px-3 py-1"
+        >
+          Sau
+        </button>
+      </div>
     </div>
   );
 };

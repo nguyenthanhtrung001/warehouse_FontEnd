@@ -18,7 +18,10 @@ const LogoutButton: React.FC = () => {
       localStorage.removeItem('employee');
     }
     // Điều hướng đến trang đăng nhập
-   
+    setTimeout(() => {
+      window.location.reload();
+      
+    }, 1); // Đợi một chút trước khi tải lại trang
   };
 
   return (

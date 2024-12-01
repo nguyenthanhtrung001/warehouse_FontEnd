@@ -24,6 +24,29 @@ const defaultMenuGroups = [
       { label: "Quản lý tài khoản", route: "/admin/acounts", access: "accountsmanager" },
       { label: "Quản lý kho", route: "/admin/warehouse", access: "manager_warehouse" },
       {
+        label: "Quản lý kho hàng",
+        route: "#", // Không cần đổi nếu là mục chính
+        access: "warehouse_access",
+        children: [
+          { 
+            label: "Quản lý vị trí kho", 
+            route: "/warehouse/locations", // Route rõ nghĩa, dùng danh từ số nhiều theo RESTful
+            access: "manage_warehouse_positions" 
+          },
+          { 
+            label: "Tra cứu lô hàng", 
+            route: "/warehouse/batches", // Tên rõ ràng để thể hiện danh sách hoặc thông tin lô hàng
+            access: "view_batch_info" 
+          },
+          { 
+            label: "Tra cứu vị trí", 
+            route: "/warehouse/locations/search", // Đường dẫn bổ sung tính năng tìm kiếm vị trí
+            access: "view_location_info" 
+          },
+        ],
+      },
+      
+      {
         label: "Hàng hóa",
         route: "#",
         access: "products",

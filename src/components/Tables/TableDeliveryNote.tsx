@@ -9,6 +9,7 @@ import axiosInstance from '@/utils/axiosInstance';
 import { format } from 'date-fns';
 import Swal from 'sweetalert2';
 import { useEmployeeStore } from '@/stores/employeeStore';
+import SearchInput from '../Search/SearchInputProps';
 
 
 
@@ -18,30 +19,62 @@ const TableDeliveryNote = () => {
   const [receiptDetails, setReceiptDetails] = useState<any[]>([]);
   const router = useRouter(); // Khai báo useRouter
   const { employee } = useEmployeeStore();
+  const [currentPage, setCurrentPage] = useState(1);  // Trang hiện tại
+  const [totalPages, setTotalPages] = useState(1);  // Tổng số trang
+  const [itemsPerPage] = useState(10);  // Số items mỗi trang
+  const [allReceipts, setAllReceipts] = useState<Receipt[]>([]);  // Toàn bộ dữ liệu
+  const [searchTerm, setSearchTerm] = useState("");  // Thêm state cho từ khóa tìm kiếm
 
-    const fetchNote = async () => {
-      try {
-        if (!employee || !employee.warehouseId) return;
-        const response = await axiosInstance.get(API_ROUTES.DELIVERY_NOTES_WAREHOUSE(employee?.warehouseId));
-        const receiptList = await Promise.all(response.data.map(async (item: any) => {
-          return {
-            id: item.id,
-            date: new Date(item.deliveryDate),  // Convert to Date object
-            supplier: item.receipt.supplier.supplierName,
-            price: item.price,
-            status: item.status === 1 ? "Đã trả" : "Đã hủy",
-            employee: item.employeeId,
-          };
-        }));
-        setReceipts(receiptList);
-      } catch (error) {
-        console.error("Error fetching receipts: ", error);
-      }
-    };
-    useEffect(() => {
 
+  const fetchNote = async () => {
+    try {
+      if (!employee || !employee.warehouseId) return;
+  
+      const response = await axiosInstance.get(API_ROUTES.DELIVERY_NOTES_WAREHOUSE(employee?.warehouseId));
+  
+      const receiptList = await Promise.all(response.data.map(async (item: any) => {
+        return {
+          id: item.id,
+          date: new Date(item.deliveryDate),
+          supplier: item.receipt.supplier.supplierName,
+          price: item.price,
+          status: item.status === 1 ? "Đã trả" : "Đã hủy",
+          employee: item.employeeId,
+        };
+      }));
+  
+      // Lọc các phiếu dựa trên từ khóa tìm kiếm
+      const filteredReceipts = receiptList.filter((receipt) => {
+        const searchTermLower = searchTerm.toLowerCase();
+        return (
+          receipt.id.toString().includes(searchTermLower) ||  // Tìm theo mã phiếu
+          receipt.supplier.toLowerCase().includes(searchTermLower) ||  // Tìm theo nhà cung cấp
+          receipt.status.toLowerCase().includes(searchTermLower)  // Tìm theo trạng thái
+        );
+      });
+  
+      setAllReceipts(filteredReceipts);  // Lưu dữ liệu đã lọc
+      setTotalPages(Math.ceil(filteredReceipts.length / itemsPerPage));  // Cập nhật số trang
+      setReceipts(filteredReceipts.slice(0, itemsPerPage));  // Hiển thị trang đầu tiên của dữ liệu đã lọc
+    } catch (error) {
+      console.error("Error fetching receipts: ", error);
+    }
+  };
+  
+
+  useEffect(() => {
     fetchNote();
-  }, [employee]);
+  }, [employee, searchTerm]);  // Thêm searchTerm vào mảng dependencies
+  
+
+  // Hàm phân trang: Hiển thị các items của trang hiện tại
+  const paginate = (page: number) => {
+    if (page < 1 || page > totalPages) return;  // Kiểm tra nếu trang không hợp lệ
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = page * itemsPerPage;
+    setReceipts(allReceipts.slice(startIndex, endIndex));
+    setCurrentPage(page);  // Cập nhật trang hiện tại
+  };
 
   const handleReceiptClick = async (receipt: Receipt) => {
     try {
@@ -106,12 +139,19 @@ const TableDeliveryNote = () => {
       <div className="px-4 py-6 md:px-6 xl:px-7.5">
         
         <div className="grid grid-cols-12">
-          <div className="col-span-9">
-            <h4 className="text-xl font-semibold text-black dark:text-white text-3xl">
+          <div className="col-span-5">
+            <h4 className="text-2xl font-semibold text-black dark:text-white text-3xl">
               TRẢ HÀNG NHẬP - XUẤT KHO
             </h4>
           </div>
-          <div className="col-span-3 px-2 font-bold">
+          <div className="col-span-4 flex items-center">
+            <SearchInput
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              placeholder="Nhập mã hóa đơn hoặc tên khách hàng"
+            />
+          </div>
+          <div className="col-span-3 flex justify-end  font-bold">
             <Link href="/deliverynotes/add">
               <button className="bg-green-600 text-white px-4 py-2 rounded">
                 Trả hàng nhập
@@ -237,6 +277,30 @@ const TableDeliveryNote = () => {
           )}
         </React.Fragment>
       ))}
+      {/* Phần điều hướng trang */}
+      <div className="pagination my-4 flex items-center justify-center space-x-4">
+        <button
+          className={`prev-page rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-md hover:bg-blue-700 focus:outline-none ${currentPage === 1 ? "cursor-not-allowed opacity-50" : ""}`}
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+        >
+          Trước
+        </button>
+
+        <span className="text-gray-700 text-lg">
+          Trang {currentPage} / {totalPages}
+        </span>
+
+        <button
+          className={`next-page rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-md hover:bg-blue-700 focus:outline-none ${currentPage === totalPages ? "cursor-not-allowed opacity-50" : ""}`}
+          onClick={() =>
+            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+          }
+          disabled={currentPage === totalPages}
+        >
+          Sau
+        </button>
+      </div>
     </div>
   );
 };

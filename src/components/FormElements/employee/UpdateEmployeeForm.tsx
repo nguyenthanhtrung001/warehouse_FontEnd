@@ -1,10 +1,10 @@
 "use client";
-// src/components/FormElements/employee/UpdateEmployeeForm.tsx
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '@/utils/axiosInstance';
 import API_ROUTES from '@/utils/apiRoutes';
 import { Employee } from '@/types/employee';
 import Swal from 'sweetalert2';
+import { FaUser, FaPhone, FaEnvelope, FaCalendarAlt, FaMapMarkerAlt, FaDollarSign, FaUserTag, FaToggleOn } from 'react-icons/fa';
 
 interface UpdateEmployeeFormProps {
   employee?: Employee | null;
@@ -31,8 +31,8 @@ const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({ employee, isUpd
       setFormData({
         ...employee,
         id: employee.id.toString(),
-        dateOfBirth: new Date(employee.dateOfBirth).toISOString().split('T')[0], // Đảm bảo định dạng ngày
-        dateJoined: new Date(employee.dateJoined).toISOString().split('T')[0], // Đảm bảo định dạng ngày
+        dateOfBirth: new Date(employee.dateOfBirth).toISOString().split('T')[0],
+        dateJoined: new Date(employee.dateJoined).toISOString().split('T')[0],
       });
     }
   }, [employee]);
@@ -44,8 +44,6 @@ const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({ employee, isUpd
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Confirm the action with the user
     const confirmation = await Swal.fire({
       title: 'Xác nhận',
       text: isUpdate ? 'Bạn có chắc muốn cập nhật thông tin nhân viên không?' : 'Bạn có chắc muốn thêm nhân viên mới không?',
@@ -59,7 +57,7 @@ const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({ employee, isUpd
       try {
         const payload = {
           ...formData,
-          id: parseInt(formData.id, 10), // Chuyển đổi id về số khi gửi lên API
+          id: parseInt(formData.id, 10),
         };
 
         if (isUpdate && employee?.id !== undefined) {
@@ -68,48 +66,51 @@ const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({ employee, isUpd
           await axiosInstance.post(API_ROUTES.EMPLOYEES, payload);
         }
 
-        // Show success notification
         Swal.fire({
           title: 'Thành công!',
           text: isUpdate ? 'Thông tin nhân viên đã được cập nhật.' : 'Nhân viên mới đã được thêm.',
           icon: 'success',
         });
 
-        // Cập nhật lại danh sách nhân viên sau khi thêm hoặc cập nhật thành công
-        window.location.reload(); // Tải lại trang sau khi cập nhật hoặc thêm thành công
+        window.location.reload();
       } catch (error) {
-        // Show error notification
         Swal.fire({
           title: 'Lỗi!',
           text: 'Có lỗi xảy ra khi xử lý thông tin. Vui lòng thử lại.',
           icon: 'error',
         });
-        console.error("Error submitting form: ", error);
       }
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="grid grid-cols-2 gap-4 text-black">
+    <form onSubmit={handleSubmit} className="p-6 bg-white rounded-lg shadow-lg space-y-6">
+      <div className="grid grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Tên nhân viên</label>
+          <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+            <FaUser />
+            <span>Tên nhân viên</span>
+          </label>
           <input
             type="text"
             name="employeeName"
             value={formData.employeeName}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             required
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700">Giới tính</label>
+          <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+            <FaUserTag />
+            <span>Giới tính</span>
+          </label>
           <select
             name="gender"
             value={formData.gender}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             required
           >
             <option value="">Chọn giới tính</option>
@@ -118,89 +119,125 @@ const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({ employee, isUpd
             <option value="Khác">Khác</option>
           </select>
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
+          <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+            <FaPhone />
+            <span>Số điện thoại</span>
+          </label>
           <input
             type="text"
             name="phoneNumber"
             value={formData.phoneNumber}
             onChange={handleChange}
-            className="focus:border-indigo-500 focus:outline-none mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             required
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700">Ngày sinh</label>
+          <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+            <FaCalendarAlt />
+            <span>Ngày sinh</span>
+          </label>
           <input
             type="date"
             name="dateOfBirth"
             value={formData.dateOfBirth}
             onChange={handleChange}
-            className="focus:border-indigo-500 focus:outline-none mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             required
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700">Ngày vào làm</label>
+          <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+            <FaCalendarAlt />
+            <span>Ngày vào làm</span>
+          </label>
           <input
             type="date"
             name="dateJoined"
             value={formData.dateJoined}
             onChange={handleChange}
-            className="focus:border-indigo-500 focus:outline-none mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             required
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700">Email</label>
+          <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+            <FaEnvelope />
+            <span>Email</span>
+          </label>
           <input
             type="email"
             name="email"
             value={formData.email}
             onChange={handleChange}
-            className="focus:border-indigo-500 focus:outline-none mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             required
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700">Địa chỉ</label>
+          <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+            <FaMapMarkerAlt />
+            <span>Địa chỉ</span>
+          </label>
           <textarea
             name="address"
             value={formData.address}
             onChange={handleChange}
-            className="focus:border-indigo-500 focus:outline-none mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             required
           ></textarea>
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700">Chức vụ</label>
-          <input
-            type="text"
+          <label className="text-gray-700 block flex items-center gap-2 text-sm font-medium">
+            <FaUserTag /> Chức vụ
+          </label>
+          <select
             name="position"
             value={formData.position}
             onChange={handleChange}
-            className="focus:border-indigo-500 focus:outline-none mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="border-gray-300 mt-2 w-full rounded-lg border px-4 py-2 focus:ring-2 focus:ring-indigo-500"
             required
-          />
+          >
+            <option value="Nhân viên">Nhân viên</option>
+            {/* Hiển thị "Quản lý" nếu không phải là Quản lý */}
+            {employee?.position == "Quản lý" && (
+              <option value="Quản lý">Quản lý</option>
+            )}
+          </select>
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700">Lương cơ bản</label>
+          <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+            <FaDollarSign />
+            <span>Lương cơ bản</span>
+          </label>
           <input
             type="number"
             name="basicSalary"
             value={formData.basicSalary}
             onChange={handleChange}
-            className="focus:border-indigo-500 focus:outline-none mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             required
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
+          <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+            <FaToggleOn />
+            <span>Trạng thái</span>
+          </label>
           <select
             name="status"
             value={formData.status}
             onChange={handleChange}
-            className="focus:border-indigo-500 focus:outline-none mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             required
           >
             <option value={1}>Hoạt động</option>
@@ -208,10 +245,11 @@ const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({ employee, isUpd
           </select>
         </div>
       </div>
-      <div className="mt-4 flex justify-end">
+
+      <div className="mt-6 flex justify-end">
         <button
           type="submit"
-          className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           {isUpdate ? "Cập nhật nhân viên" : "Thêm nhân viên"}
         </button>

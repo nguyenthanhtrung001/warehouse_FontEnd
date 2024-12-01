@@ -8,12 +8,13 @@ import ActionButtons from '@/components/FormElements/Receipt/ActionButtons';
 import { Product } from '@/types/product';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import axios from '@/utils/axiosInstance';
+import axiosInstance from '@/utils/axiosInstance';
 import API_ROUTES from '@/utils/apiRoutes';
 import Swal from 'sweetalert2';
 import Modal from '@/components/Modal/Modal';
 import FormAddProduct from '@/components/FormElements/product/AddProductForm';
 import { useEmployeeStore, initializeEmployeeFromLocalStorage } from '@/stores/employeeStore';
+import axios from "axios";
 
 
 
@@ -32,7 +33,7 @@ const Home: React.FC = () => {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const response = await axios.get<Product[]>(API_ROUTES.API_PRODUCTS);
+      const response = await axiosInstance.get<Product[]>(API_ROUTES.API_PRODUCTS);
       const productsWithQuantity = response.data.map((product) => ({
         ...product,
         quantity: 1, // Đặt quantity mặc định là 1
@@ -112,7 +113,7 @@ const Home: React.FC = () => {
             warehouseId:  employee?.warehouseId,
           };
           console.log('Dữ liệu gửi đi:', JSON.stringify(data));
-          const response = await axios.post(API_ROUTES.RECEIPTS, data);
+          const response = await axiosInstance.post(API_ROUTES.RECEIPTS, data);
   
           if (response.status === 200 || response.status === 201) {
             await Swal.fire({
@@ -134,8 +135,30 @@ const Home: React.FC = () => {
             toast.error('Gửi phiếu nhập hàng thất bại');
           }
         } catch (error) {
-          console.error('Lỗi khi gửi phiếu nhập hàng:', error);
-          toast.error('Lỗi khi gửi phiếu nhập hàng');
+          console.error("Lỗi khi gửi phiếu nhập hàng:", error);
+    
+          let errorMessage = "Đã xảy ra lỗi không xác định. Vui lòng thử lại.";
+          let validationErrors: string[] = [];
+    
+          if (axios.isAxiosError(error) && error.response) {
+            // Lấy thông báo lỗi từ phản hồi của server
+            errorMessage = error.response.data?.message || errorMessage;
+    
+            // Lấy thông tin lỗi chi tiết nếu có (danh sách lỗi từ server)
+            validationErrors = error.response.data?.data || [];
+          }
+    
+          // Hiển thị thông báo lỗi với chi tiết từ server
+          if (validationErrors.length > 0) {
+            errorMessage += `\n- ${validationErrors.join("\n- ")}`;
+          }
+    
+          await Swal.fire({
+            title: "Lỗi!",
+            text: errorMessage,
+            icon: "error",
+            confirmButtonText: "OK",
+          });
         }
       }
     });

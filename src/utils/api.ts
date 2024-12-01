@@ -1,18 +1,20 @@
 // src/utils/api.ts
 
-import axios from './axiosInstance';
+import axiosInstance from './axiosInstance';
 import API_ROUTES from './apiRoutes';
 import { useEmployeeStore } from '@/stores/employeeStore'; // Nhập store mới
 import { useCustomerStore } from '@/stores/customerStore'; // Nhập store mới
 import { Employee } from '@/types/employee';
 import { Customer } from '@/types/customer';
 import { notification } from 'antd';
+import { ForecastAPIResponse, ItemForecast, ForecastResult } from '@/types/predict';
+import axios from 'axios';
 
 
 
 export async function fetchUserInfo(sessionToken: string) {
   try {
-    const res = await axios.get('http://localhost:8888/v1/identity/users/my-info', {
+    const res = await axiosInstance.get('http://localhost:8888/v1/identity/users/my-info', {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${sessionToken}`,
@@ -38,7 +40,7 @@ export async function fetchUserInfo(sessionToken: string) {
 
 export async function fetchUserPermissions(sessionToken: string) {
   try {
-    const res = await axios.get('http://localhost:8888/v1/identity/users/my-info', {
+    const res = await axiosInstance.get('http://localhost:8888/v1/identity/users/my-info', {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${sessionToken}`,
@@ -63,7 +65,7 @@ export async function fetchUserPermissions(sessionToken: string) {
 // Lấy thông tin đăng nhập khách hàng
 export async function fetchCustomerByAccountId(email: string): Promise<Customer | null> {
   try {
-    const res = await axios.get(API_ROUTES.CUSTOMER_DETAILS_BY_EMAIL(email));  // API route dành cho Customer
+    const res = await axiosInstance.get(API_ROUTES.CUSTOMER_DETAILS_BY_EMAIL(email));  // API route dành cho Customer
     const data: Customer = res.data;
 
     if (data) {
@@ -86,7 +88,7 @@ export async function fetchCustomerByAccountId(email: string): Promise<Customer 
 // lấy thông tin đăng nhập nhan vien
 export async function fetchEmployeeByAccountId(accountId: string): Promise<Employee | null> {
   try {
-    const res = await axios.get(API_ROUTES.EMPLOYEE_BY_ACCOUNT_ID(accountId));
+    const res = await axiosInstance.get(API_ROUTES.EMPLOYEE_BY_ACCOUNT_ID(accountId));
     const data: Employee = res.data;
 
     if (data) {
@@ -113,7 +115,7 @@ export async function fetchEmployeeByAccountId(accountId: string): Promise<Emplo
 
 export async function fetchUserName() {
   try {
-    const res = await axios.get('http://localhost:8888/v1/identity/users/my-info');
+    const res = await axiosInstance.get('http://localhost:8888/v1/identity/users/my-info');
 
     const data = res.data;
     if (data.code === 1000) {
@@ -135,7 +137,7 @@ export const fetchLowestProducts = async (quantity:number, warehouseId:number) =
   }
 
   try {
-    const response = await axios.get(`http://localhost:8888/v1/api/products/notify-lowest`, {
+    const response = await axiosInstance.get(`http://localhost:8888/v1/api/products/notify-lowest`, {
       params: {
         quantity: quantity,
         warehouseId: warehouseId,
@@ -149,31 +151,65 @@ export const fetchLowestProducts = async (quantity:number, warehouseId:number) =
 };
 
 
-// Định nghĩa kiểu dữ liệu dự báo
-type ForecastResult = {
-  itemId: string;
-  forecastTimestamp: string;
-  forecastValue: number;
-  standardError: number;
-  confidenceIntervalLowerBound: number;
-  confidenceIntervalUpperBound: number;
-};
-
-// Hàm lấy dữ liệu dự báo từ API
-export const fetchForecastData = async (): Promise<ForecastResult[]> => {
+export const fetchForecastData = async (): Promise<{
+  itemForecasts: ItemForecast[];
+  forecastResults: ForecastResult[];
+}> => {
   try {
-    const response = await axios.get<ForecastResult[]>('http://localhost:8888/v1/api/bigquery/forecast/result');
-    return response.data;
-  } catch (error: unknown) {
-    handleApiError(error, 'Lỗi khi lấy dữ liệu dự báo');
-    return [];
+    const response = await axiosInstance.get<ForecastAPIResponse>('http://localhost:8888/v1/api/bigquery/forecast/result?warehouseId=3');
+
+    const { itemForecastTotal, forecastResults } = response.data;
+
+    // Kiểm tra dữ liệu trả về
+    if (!itemForecastTotal || !forecastResults) {
+      console.error('Dữ liệu trả về từ API không hợp lệ:', response.data);
+      throw new Error('Dữ liệu API không đầy đủ hoặc sai cấu trúc.');
+    }
+
+    // Chuyển đổi itemForecastTotal thành mảng
+    const itemForecasts: ItemForecast[] = Object.values(itemForecastTotal);
+
+    // Xử lý dữ liệu forecastResults
+    const processedForecastResults: ForecastResult[] = forecastResults.map((result) => {
+      const {
+        forecastValue,
+        standardError,
+        confidenceIntervalLowerBound,
+        confidenceIntervalUpperBound,
+      } = result;
+    
+      return {
+        ...result,
+        forecastValue: typeof forecastValue === 'string' ? parseFloat(forecastValue) : forecastValue,
+        standardError: typeof standardError === 'string' ? parseFloat(standardError) : standardError,
+        confidenceIntervalLowerBound:
+          typeof confidenceIntervalLowerBound === 'string'
+            ? parseFloat(confidenceIntervalLowerBound)
+            : confidenceIntervalLowerBound,
+        confidenceIntervalUpperBound:
+          typeof confidenceIntervalUpperBound === 'string'
+            ? parseFloat(confidenceIntervalUpperBound)
+            : confidenceIntervalUpperBound,
+      };
+    });
+    
+    return { itemForecasts, forecastResults: processedForecastResults };
+  } catch (error: any) {
+    // Xử lý lỗi và log thêm chi tiết
+    console.error('Lỗi khi gọi API fetchForecastData:', error.message || error);
+
+    if (axios.isAxiosError(error)) {
+      console.error('Chi tiết lỗi Axios:', error.response?.data || error.message);
+    }
+
+    return { itemForecasts: [], forecastResults: [] };
   }
 };
 
 // Hàm để train lại mô hình
 export const trainModel = async (): Promise<void> => {
   try {
-    await axios.post('/api/model/train');
+    await axiosInstance.post('http://localhost:8888/v1/api/bigquery/train');
     notification.success({
       message: 'Train mô hình thành công',
       description: 'Mô hình đã được train lại thành công!',

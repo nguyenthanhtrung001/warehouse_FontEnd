@@ -20,7 +20,10 @@ const TableReceipt = () => {
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const { employee } = useEmployeeStore();
-
+  const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
+  const [itemsPerPage] = useState(10); // Số mục trên mỗi trang
+  const [totalPages, setTotalPages] = useState(1); // Tổng số trang
+  
   const fetchCheckInventories = useCallback(async () => {
     if (!employee || !employee.warehouseId) return;
     try {
@@ -45,14 +48,16 @@ const TableReceipt = () => {
           employee: item.employeeId,
           notes: item.notes,
           status: item.status === 1 ? "Hoàn tất" : "Đã hủy",
-        }));
-      setCheckInventories(checkInventoryList);
+        }))
+        .sort((a: { dateCheck: { getTime: () => number; }; }, b: { dateCheck: { getTime: () => number; }; }) => b.dateCheck.getTime() - a.dateCheck.getTime());  // Sort by latest date
+  
+      setTotalPages(Math.ceil(checkInventoryList.length / itemsPerPage)); // Update total pages
+      setCheckInventories(checkInventoryList.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)); // Only show items for the current page
     } catch (error) {
       console.error("Error fetching check inventories: ", error);
     }
-  }, [startDate, endDate, searchTerm, employee]);
-
-
+  }, [startDate, endDate, searchTerm, employee, currentPage, itemsPerPage]);
+  
   const handleCheckInventoryClick = async (checkInventory: any) => {
     try {
       if (selectedCheckInventory && selectedCheckInventory.id === checkInventory.id) {
@@ -69,7 +74,7 @@ const TableReceipt = () => {
   };
   useEffect(() => {
     fetchCheckInventories();
-  }, [employee,startDate, endDate, searchTerm, fetchCheckInventories]); 
+  }, [employee, startDate, endDate, searchTerm, currentPage, fetchCheckInventories]);
   
   const handleCancelCheckInventory = async (id: number) => {
     const result = await Swal.fire({
@@ -110,7 +115,7 @@ const TableReceipt = () => {
       <div className="grid grid-cols-12">
           <div className="col-span-3">
             <h4 className="text-3xl font-semibold text-black dark:text-white ">
-              KIỂM KHO {employee?.warehouseId}
+              KIỂM KHO 
             </h4>
           </div>
           <div className="col-span-5 flex items-center">
@@ -282,7 +287,29 @@ const TableReceipt = () => {
           )}
         </React.Fragment>
       ))}
+
+<div className="flex justify-center mt-4">
+  <button
+    className="bg-gray-300 text-black px-4 py-2 rounded mr-2"
+    disabled={currentPage === 1}
+    onClick={() => setCurrentPage(currentPage - 1)}
+  >
+    Trước
+  </button>
+  
+  <span className="px-4 py-2">{`Trang ${currentPage} / ${totalPages}`}</span>
+  
+  <button
+    className="bg-gray-300 text-black px-4 py-2 rounded ml-2"
+    disabled={currentPage === totalPages}
+    onClick={() => setCurrentPage(currentPage + 1)}
+  >
+    Sau
+  </button>
+</div>
+
     </div>
+    
   );
 };
 

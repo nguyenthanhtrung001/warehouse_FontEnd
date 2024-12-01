@@ -12,7 +12,6 @@ import Image from 'next/image';
 import Swal from 'sweetalert2';
 import { useEmployeeStore } from '@/stores/employeeStore';
 
-
 const TableProduct = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -23,7 +22,7 @@ const TableProduct = () => {
   const { employee } = useEmployeeStore();
   // Thêm state phân trang
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4; // Số sản phẩm mỗi trang
+  const itemsPerPage = 7; // Số sản phẩm mỗi trang
 
   const fetchProducts = async () => {
     if (!employee || !employee.warehouseId) return;
@@ -53,7 +52,7 @@ const TableProduct = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [employee]);
 
   useEffect(() => {
     const filtered = products.filter((product) => {
@@ -123,10 +122,9 @@ const TableProduct = () => {
           'Mặt hàng đã ngừng kinh doanh.',
           'success'
         );
-       // fetchInvoices(); // Cập nhật danh sách đơn hàng
       }
     } catch (error) {
-      console.error("Error canceling invoice: ", error);
+      console.error("Error canceling product: ", error);
       Swal.fire(
         'Thất bại!',
         'Đã xảy ra lỗi khi xóa mặt hàng.',
@@ -134,6 +132,7 @@ const TableProduct = () => {
       );
     }
   };
+
   // Tính toán các sản phẩm cần hiển thị trên trang hiện tại
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -199,7 +198,7 @@ const TableProduct = () => {
         </div>
       </div>
 
-      {filteredProducts.map((product) => (
+      {currentItems.map((product) => (
         <React.Fragment key={product.id}>
           <div className="container mx-auto px-4 mb-1 border-b border-gray-200 p-1">
             <div className="grid grid-cols-12 gap-4">
@@ -250,7 +249,6 @@ const TableProduct = () => {
                         alt="Product"
                         className="w-full h-auto"
                       />
-
                     </div>
                   </div>
                   <div className="col-span-5 py-8 text-black bg-blue-50 px-5">
@@ -287,26 +285,24 @@ const TableProduct = () => {
                 <div className="grid grid-cols-12 mt-3 ">
                   <div className="col-span-6"></div>
                   <div className="col-span-6 flex justify-end">
-                  <button
-                    className="text-white px-4 py-2 rounded mr-2 font-bold bg-blue-500"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Ngăn sự kiện click trên container ảnh hưởng
-                      handleUpdateProduct();
-                    }}
-                  >
-                    Cập nhật
-                  </button> 
-                  <button  onClick={() => handleDeleteProduct(product.id)}
-                  className="bg-red text-white px-4 py-2 rounded mr-2 font-bold">
-                    Ngừng kinh doanh
+                    <button
+                      className="text-white px-4 py-2 rounded mr-2 font-bold bg-blue-500"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Ngăn sự kiện click trên container ảnh hưởng
+                        handleUpdateProduct();
+                      }}
+                    >
+                      Cập nhật
+                    </button> 
+                    <button  onClick={() => handleDeleteProduct(product.id)}
+                      className="bg-red text-white px-4 py-2 rounded mr-2 font-bold">
+                      Ngừng kinh doanh
                     </button>
-                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           )}
-
-         
         </React.Fragment>
       ))}
         {/* Phân trang */}
@@ -317,7 +313,7 @@ const TableProduct = () => {
             disabled={currentPage === 1}
             className="px-4 py-2 mx-1 bg-blue-600 text-white rounded disabled:bg-gray-400"
           >
-            Trước111
+            Trước
           </button>
           <span className="px-4 py-2 mx-1">
             Trang {currentPage} / {totalPages}

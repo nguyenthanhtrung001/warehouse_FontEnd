@@ -1,14 +1,6 @@
 import TableEmployees from "@/components/Tables/TableEmployee";
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import { Metadata } from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import AddProductModal from "@/components/FormElements/product/AddProductForm";
-import AddReceiptForm from "@/components/FormElements/Receipt/AddReceiptForm";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Import CSS cho react-toastify
-
-
-
 
 export const metadata: Metadata = {
   title: "QUẢN LÝ KHO HÀNG",
@@ -23,12 +15,9 @@ const TablesPage = () => {
      
       <div className="flex flex-col gap-12">
       
-        {/* <TableTwo /> */}
+       
         <TableEmployees/>
-        <ToastContainer />
-        
-          {/* <TableOne />
-        <TableThree /> */}
+       
       </div>
     </DefaultLayout>
   );

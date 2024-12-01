@@ -18,6 +18,10 @@ const TableInvoice = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const router = useRouter();
   const { employee } = useEmployeeStore();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5); // Số lượng mục mỗi trang
+  const [totalPages, setTotalPages] = useState(1);
+  const [paginatedInvoices, setPaginatedInvoices] = useState<any[]>([]);
 
   
 
@@ -33,12 +37,14 @@ const TableInvoice = () => {
           return (
             (!startDate || printDate >= startDate) &&
             (!endDate || printDate <= endDate) &&
-            (item.id.toString().includes(searchTerm) || searchLower === '' || item.customer.customerName.toLowerCase().includes(searchLower))
+            (item.id.toString().includes(searchTerm) || searchLower === '' 
+            ||  item.contactInfo.toLowerCase().includes(searchLower))
           );
         })
         .map((item: any) => ({
           id: item.id,
           printDate: new Date(item.printDate),
+          contactInfo: item.contactInfo,
           // customerName: item.customer.customerName,
           // phoneNumber: item.customer.phoneNumber,
           // address: item.customer.address,
@@ -47,12 +53,34 @@ const TableInvoice = () => {
           employee: item.employeeId,
           status: item.status === 2 ? "Đã thanh toán" : "Tồn tại trả",
         }));
-      setInvoices(invoiceList);
+        const sorted = invoiceList.sort(
+          (a: { date: number }, b: { date: number }) => b.date - a.date,
+        );
+        setInvoices(sorted);
+  
+        // Tính toán tổng số trang
+        const total = Math.ceil(sorted.length / pageSize);
+        setTotalPages(total);
+  
+        // Phân trang
+        const startIndex = (currentPage - 1) * pageSize;
+        const paginatedData = sorted.slice(startIndex, startIndex + pageSize);
+        setPaginatedInvoices(paginatedData);
     } catch (error) {
       console.error("Error fetching invoices: ", error);
     }
-  }, [startDate, endDate, searchTerm,employee]);
+  }, [startDate, endDate, searchTerm, employee, currentPage, pageSize]);
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      fetchInvoices();
+    }, 500);  // Delay 500ms sau khi người dùng gõ
+  
+    return () => {
+      clearTimeout(handler);  // Xóa bỏ khi người dùng nhập tiếp
+    };
+  }, [searchTerm]);
+  
   const handleInvoiceClick = async (invoice: any) => {
     try {
       if (selectedInvoice && selectedInvoice.id === invoice.id) {
@@ -129,13 +157,13 @@ const TableInvoice = () => {
         <div className="grid grid-cols-12 gap-4 border-t border-stroke px-4 py-4.5 bg-blue-700 text-white">
           <div className="col-span-2 font-medium ml-4">Mã hóa đơn</div>
           <div className="col-span-3 font-medium">Thời gian</div>
-          <div className="col-span-3 font-medium">Khách hàng</div>
+          <div className="col-span-3 font-medium">Thông tin đơn hàng</div>
           <div className="col-span-2 font-medium">Tổng tiền</div>
           <div className="col-span-2 font-medium">Trạng thái</div>
         </div>
       </div>
 
-      {invoices.map((invoice) => (
+      {paginatedInvoices.map((invoice) => (
         <React.Fragment key={invoice.id}>
           <div className="container mx-auto px-4 mb-1 border-b border-gray-200 p-1 text-black">
             <div className="grid grid-cols-12 gap-4">
@@ -146,7 +174,7 @@ const TableInvoice = () => {
                 <p className="text-sm text-black dark:text-white mt-2">{format(invoice.printDate, 'dd/MM/yyyy - HH:mm:ss')}</p>
               </div>
               <div className="col-span-3">
-                <p className="text-sm text-black dark:text-white mt-2">{invoice.customerName}</p>
+                <p className="text-sm text-black dark:text-white mt-2">{invoice.contactInfo}</p>
               </div>
               <div className="col-span-2">
                 <p className="text-sm text-black dark:text-white mt-2">{formatCurrency(invoice.price)}</p>
@@ -173,9 +201,7 @@ const TableInvoice = () => {
                   </div>
                   <div className="col-span-4 p-2 mt-12">
                     <ul className="list-none p-0">
-                      <li className="mb-2 border-b border-gray-300 pb-2">Khách hàng: <span className="font-bold">{invoice.customerName}</span></li>
-                      <li className="mb-2 border-b border-gray-300 pb-2">SĐT: <span className="font-bold ">{invoice.phoneNumber}</span></li>
-                      <li className="mb-2 border-b border-gray-300 pb-2">Địa chỉ: <span className="font-bold">{invoice.address}</span></li>
+                      <li className="mb-2 border-b border-gray-300 pb-4">Thông tin đơn hàng: <br /> <span className="font-bold">{invoice.contactInfo}</span></li>
                     </ul>
                   </div>
                   <div className="col-span-4 p-2 mt-12">
@@ -235,6 +261,29 @@ const TableInvoice = () => {
           )}
         </React.Fragment>
       ))}
+       <div className="pagination my-4 flex items-center justify-center space-x-4">
+        <button
+          className={`prev-page rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-md hover:bg-blue-700 focus:outline-none ${currentPage === 1 ? "cursor-not-allowed opacity-50" : ""}`}
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+        >
+          Trước
+        </button>
+
+        <span className="text-gray-700 text-lg">
+          Trang {currentPage} / {totalPages}
+        </span>
+
+        <button
+          className={`next-page rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-md hover:bg-blue-700 focus:outline-none ${currentPage === totalPages ? "cursor-not-allowed opacity-50" : ""}`}
+          onClick={() =>
+            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+          }
+          disabled={currentPage === totalPages}
+        >
+          Sau
+        </button>
+      </div>
     </div>
   );
 };

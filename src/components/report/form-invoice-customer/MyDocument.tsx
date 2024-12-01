@@ -4,43 +4,55 @@ import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import Table from './Table';
 import '@/utils/fontSetup'; // Import font
 
-// Định nghĩa các kiểu dáng cho hóa đơn
 const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     padding: 20,
-    fontFamily: 'Roboto', // Đặt font chữ Roboto
+    fontFamily: 'Roboto',
+    backgroundColor: '#f9f9f9', // Màu nền nhẹ cho trang
   },
   header: {
     marginBottom: 20,
     padding: 10,
     borderBottomWidth: 2,
-    borderBottomColor: '#4f81bd',
+    borderBottomColor: '#0073e6', // Xanh đậm chuyên nghiệp
     textAlign: 'center',
+    backgroundColor: '#e6f0ff', // Xanh nhạt làm nổi bật header
   },
   companyInfo: {
     fontSize: 12,
     marginBottom: 8,
-    color: '#333',
+    color: '#0073e6', // Màu xanh đậm để đồng bộ với header
   },
   invoiceTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 8,
-    color: '#333',
+    color: '#333333', // Màu đậm cho tiêu đề hóa đơn
+  },
+  dateSection: {
+    fontSize: 12,
+    textAlign: 'left',
+    marginBottom: 10,
+    color: '#666', // Màu xám trung bình cho ngày tháng
+  },
+  detailsSection: {
+    marginBottom: 10,
+    color: '#666',
   },
   customerSection: {
     marginBottom: 20,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#d9d9d9', // Viền màu xám nhạt
     borderRadius: 4,
+    backgroundColor: '#f2f2f2', // Màu nền nhẹ cho vùng thông tin khách hàng
   },
   customerText: {
     fontSize: 12,
     marginBottom: 4,
-    color: '#555',
+    color: '#333', // Đậm hơn một chút để làm nổi bật nội dung
   },
   tableContainer: {
     flexDirection: 'column',
@@ -51,32 +63,42 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#ccc',
+    borderTopColor: '#d9d9d9',
     fontSize: 12,
+    color: '#333',
+  },
+  totalText: {
+    fontWeight: 'bold',
+    color: '#0073e6', // Màu xanh đậm để nhấn mạnh tổng cộng
   },
   footer: {
     fontSize: 10,
-    color: '#555',
+    color: '#999', // Màu xám nhạt cho footer
     textAlign: 'center',
     marginTop: 20,
   },
 });
 
-// Hàm lấy ngày giờ hiện tại
-const getCurrentDateTime = () => {
-  const now = new Date();
-  return now.toLocaleString();
+// Hàm lấy ngày hiện tại dưới dạng dd/MM/yyyy
+const getCurrentDate = () => {
+  const date = new Date();
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
 };
 
 interface MyDocumentProps {
   orderId: string | null;
   customerName: string;
   customerAddress: string;
+  totalAmount: number;
+  printDate: string;
+  employeeId: number;
 }
 
-// Component hóa đơn
-const MyDocument: React.FC<MyDocumentProps> = ({ orderId, customerName, customerAddress }) => {
-  const currentDateTime = getCurrentDateTime();
+const MyDocument: React.FC<MyDocumentProps> = ({ orderId, customerName, customerAddress, totalAmount, printDate, employeeId }) => {
+  const currentDate = getCurrentDate();
 
   return (
     <Document>
@@ -90,12 +112,14 @@ const MyDocument: React.FC<MyDocumentProps> = ({ orderId, customerName, customer
 
         {/* Title */}
         <Text style={styles.invoiceTitle}>HÓA ĐƠN</Text>
-        <Text style={styles.companyInfo}>Ngày lập: {currentDateTime}</Text>
 
-        {/* Mã hóa đơn */}
-        {orderId && (
-          <Text style={styles.companyInfo}>Mã hóa đơn: DH000{orderId}</Text>
-        )}
+        {/* Mã hóa đơn và thông tin bổ sung */}
+        <View style={styles.detailsSection}>
+          {orderId && <Text style={styles.companyInfo}>Mã hóa đơn: DH000{orderId}</Text>}
+          <Text style={styles.dateSection}>Ngày lập: {currentDate}</Text>
+          <Text style={styles.dateSection}>Mã nhân viên lập hóa đơn: NV000{employeeId}</Text>
+          <Text style={styles.dateSection}>Ngày đặt: {printDate}</Text>
+        </View>
 
         {/* Thông tin khách hàng */}
         <View style={styles.customerSection}>
@@ -108,7 +132,11 @@ const MyDocument: React.FC<MyDocumentProps> = ({ orderId, customerName, customer
           <Table orderId={orderId} />
         </View>
 
-        
+        {/* Tổng tiền
+        <View style={styles.totalContainer}>
+          <Text style={styles.totalText}>Tổng cộng:</Text>
+          <Text style={styles.totalText}>{totalAmount.toLocaleString('vi-VN')} VND</Text>
+        </View> */}
 
         {/* Footer */}
         <View style={styles.footer}>

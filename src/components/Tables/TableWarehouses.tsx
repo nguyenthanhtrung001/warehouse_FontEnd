@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance  from '@/utils/axiosInstance';
+import axios, { AxiosError } from 'axios';
+
 import { Table, Button, Modal, Form, Input, Space, Popconfirm, Typography, message, notification } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { useForm, Controller } from 'react-hook-form';
@@ -18,6 +20,9 @@ interface Warehouse {
   status?: number;
   note: string;
 }
+interface ErrorResponse {
+  message: string;  // Giả sử API luôn trả về thuộc tính message
+}
 
 const WarehouseManagement: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
@@ -30,7 +35,7 @@ const WarehouseManagement: React.FC = () => {
   useEffect(() => {
     const fetchWarehouses = async () => {
       try {
-        const response = await axios.get("http://localhost:8888/v1/api/warehouses");
+        const response = await axiosInstance.get("http://localhost:8888/v1/api/warehouses");
         setWarehouseList(response.data);
       } catch (error) {
         console.error("Error fetching warehouses:", error);
@@ -63,7 +68,7 @@ const WarehouseManagement: React.FC = () => {
   const handleFormSubmit = async (formData: Warehouse) => {
     try {
       if (editingWarehouse) {
-        await axios.put(`http://localhost:8888/v1/api/warehouses/${editingWarehouse.id}`, formData);
+        await axiosInstance.put(`http://localhost:8888/v1/api/warehouses/${editingWarehouse.id}`, formData);
         setWarehouseList((prevList) =>
           prevList.map((warehouse) =>
             warehouse.id === editingWarehouse.id ? { ...warehouse, ...formData } : warehouse
@@ -74,7 +79,7 @@ const WarehouseManagement: React.FC = () => {
           description: 'Kho đã được cập nhật thành công!',
         });
       } else {
-        const response = await axios.post("http://localhost:8888/v1/api/warehouses", formData);
+        const response = await axiosInstance.post("http://localhost:8888/v1/api/warehouses", formData);
         setWarehouseList((prevList) => [...prevList, response.data]);
         notification.success({
           message: 'Thêm Thành Công',
@@ -83,19 +88,33 @@ const WarehouseManagement: React.FC = () => {
       }
       setIsModalVisible(false);
       reset();
-    } catch (error) {
+    }  catch (error: unknown) {
       console.error("Error saving warehouse:", error);
-      notification.error({
-        message: 'Lỗi',
-        description: 'Đã xảy ra lỗi khi lưu kho. Vui lòng thử lại!',
-      });
+  
+      // Kiểm tra và ép kiểu error thành AxiosError nếu đó là lỗi từ axios
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        // Ép kiểu response?.data về kiểu ErrorResponse
+        const errorMessage = (axiosError.response?.data as ErrorResponse)?.message || 'Đã xảy ra lỗi khi lưu kho. Vui lòng thử lại!';
+        notification.error({
+          message: 'Lỗi',
+          description: errorMessage,
+        });
+      } else {
+        // Nếu lỗi không phải từ axios
+        notification.error({
+          message: 'Lỗi',
+          description: 'Đã xảy ra lỗi không xác định. Vui lòng thử lại!',
+        });
+      }
     }
   };
+  
 
   // Hàm xóa kho
   const deleteWarehouse = async (warehouseId: number) => {
     try {
-      await axios.delete(`http://localhost:8888/v1/api/warehouses/${warehouseId}`);
+      await axiosInstance.delete(`http://localhost:8888/v1/api/warehouses/${warehouseId}`);
       setWarehouseList((prevList) => prevList.filter((warehouse) => warehouse.id !== warehouseId));
       message.success('Xóa kho thành công');
     } catch (error) {

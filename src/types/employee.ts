@@ -11,7 +11,7 @@ export interface Employee {
     position: string;
     address: string;
     email: string;
-    account_id: number | null;
+    accountId: string | null;
     status: number;
     warehouseId:number;
   }

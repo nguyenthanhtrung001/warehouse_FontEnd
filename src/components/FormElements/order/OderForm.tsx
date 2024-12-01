@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Select from "react-select";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -11,39 +11,27 @@ import { Product } from "@/types/product";
 import axiosInstance from "@/utils/axiosInstance";
 import API_ROUTES from "@/utils/apiRoutes";
 import { useRouter } from 'next/navigation';
-import { encrypt } from "@/utils/cryptoUtils"; // Import hàm mã hóa
-import { useEmployeeStore, initializeEmployeeFromLocalStorage } from '@/stores/employeeStore';
-
+import { encrypt } from "@/utils/cryptoUtils";
+import { useEmployeeStore } from '@/stores/employeeStore';
 
 const Home: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
-  const [batchName, setBatchName] = useState<string>("");
-  const [expiryDate, setExpiryDate] = useState<string>("");
+  const selectedCustomer = useRef<any>(null);
+  const selectedAddress = useRef<any>(null);
   const [note, setNote] = useState<string>("");
-  const [location, setLocation] = useState<number>(0);
-  const [employeeId, setEmployeeId] = useState<number>(0);
-  const router = useRouter(); 
+  const router = useRouter();
   const { employee } = useEmployeeStore();
-
 
   useEffect(() => {
     const fetchProducts = async () => {
+      if (!employee?.warehouseId) return;
       try {
-        const response = await axiosInstance.get(API_ROUTES.API_PRODUCTS);
-        const data: Product[] = response.data;
-        const filteredProducts = data
-        .filter((product) => product.quantity > 0)
-        .map((product) => ({
-          ...product,
-          quantityReturn: product.quantity,
-          quantity: 0, // Khởi tạo quantity bằng 0
-          
-        }));
-
-      // Cập nhật state với danh sách sản phẩm đã lọc
-      setAllProducts(filteredProducts);
+        const response = await axiosInstance.get(API_ROUTES.API_PRODUCTS_HAS_LOCATION_BATCH(employee.warehouseId));
+        const filteredProducts = response.data
+          .filter((product: Product) => product.quantity > 0)
+          .map((product: Product) => ({ ...product, quantityReturn: product.quantity, quantity: 0 }));
+        setAllProducts(filteredProducts);
       } catch (error) {
         console.error("Lỗi khi lấy sản phẩm:", error);
         toast.error("Lỗi khi lấy sản phẩm");
@@ -51,34 +39,16 @@ const Home: React.FC = () => {
     };
 
     fetchProducts();
-  }, []);
-
-  const handleSearchChange = (selectedOption: any) => {
-    if (selectedOption) {
-      const selectedProduct: Product = selectedOption.value;
-      setProducts((prevProducts) => [...prevProducts, selectedProduct]);
-    }
-  };
-
-  
+  }, [employee]);
 
   const handleComplete = async () => {
-    // Kiểm tra xem danh sách sản phẩm có ít nhất một sản phẩm không
-  if (products.length === 0) {
-    toast.error("Danh sách sản phẩm không thể trống.");
-    return;
-  }
-
-  if (!selectedCustomer) {
-      toast.error("Vui lòng chọn khách hàng");
+    if (!selectedCustomer.current || !selectedAddress.current) {
+      toast.error("Vui lòng chọn khách hàng và địa chỉ.");
       return;
     }
 
-    const invalidProducts = products.filter(
-      (product) => product.quantity <= 0
-    );
-    if (invalidProducts.length > 0) {
-      toast.error("Số lượng sản phẩm phải lớn hơn 0");
+    if (products.length === 0) {
+      toast.error("Danh sách sản phẩm không thể trống.");
       return;
     }
 
@@ -99,33 +69,23 @@ const Home: React.FC = () => {
             purchasePrice: product.price,
             quantity: product.quantity,
           }));
-
+         
           const data = {
-            customer: parseInt(selectedCustomer),
-            price: products.reduce(
-              (total, product) => total + product.quantity * product.price,
-              0
-            ),
+            customer: selectedCustomer.current.id,
+            contactId: selectedAddress.current.id,
+            price: products.reduce((total, product) => total + product.quantity * product.price, 0),
             employeeId: employee?.id,
             order_Details: orderDetails,
             note: note,
             warehouseId: employee?.warehouseId,
           };
-          console.log("Dữ liệu gửi đi:", JSON.stringify(data));
+          console.log("data gửi đi: ",data);
 
-          const response = await axiosInstance.post(
-            API_ROUTES.INVOICES,
-            data
-          );
+          const response = await axiosInstance.post(API_ROUTES.INVOICES, data);
 
-          
           if (response.status === 200 || response.status === 201) {
-            console.log("Đơn hàng được gửi thành công");
-            
-             // Lấy ID đơn hàng từ phản hồi API
-             const orderId = response.data.id; // Giả sử response trả về id đơn hàng
-             console.log("response.data.id:",response.data.id);
-             const encryptedOrderId = encrypt(orderId.toString());
+            const orderId = response.data.id;
+            const encryptedOrderId = encrypt(orderId.toString());
 
             Swal.fire({
               title: "Thành công!",
@@ -133,28 +93,21 @@ const Home: React.FC = () => {
               icon: "success",
               confirmButtonText: "OK",
             }).then(() => {
-              // Điều hướng đến trang xác nhận thanh toán sau khi đơn hàng được gửi thành công
               router.push(`/order/confirm?orderId=${encodeURIComponent(encryptedOrderId)}`);
             });
 
-
-            // Xóa tất cả dữ liệu đang hiển thị sau khi gửi thành công
             setProducts([]);
-            setSelectedCustomer("");
-            setBatchName("");
-            setExpiryDate("");
             setNote("");
-            setLocation(0);
-            setEmployeeId(0);
+            selectedCustomer.current = null;
+            selectedAddress.current = null;
           } else {
-            console.error("Gửi đơn hàng thất bại:", response.statusText);
             toast.error("Gửi đơn hàng thất bại");
           }
         } catch (error) {
           console.error("Lỗi khi gửi đơn hàng:", error);
           Swal.fire({
             title: 'Thất bại!',
-            text: 'Lỗi',
+            text: 'Lỗi khi gửi đơn hàng',
             icon: 'error',
             confirmButtonText: 'OK'
           });
@@ -164,9 +117,9 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="flex w-full h-screen p-4 text-xs text-black ">
+    <div className="flex h-screen w-full p-4 text-xs text-black">
       <div className="flex-2 w-2/3 p-4">
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-black">ĐẶT HÀNG</h1>
           <div className="flex items-center space-x-2">
             <Select
@@ -174,7 +127,12 @@ const Home: React.FC = () => {
                 value: product,
                 label: `${product.id} - ${product.productName}`,
               }))}
-              onChange={handleSearchChange}
+              onChange={(selectedOption) => {
+                const selectedProduct = selectedOption?.value;
+                if (selectedProduct) {
+                  setProducts((prevProducts) => [...prevProducts, selectedProduct]);
+                }
+              }}
               className="w-80"
               placeholder="Tìm kiếm mã hàng..."
             />
@@ -182,21 +140,14 @@ const Home: React.FC = () => {
         </div>
         <ProductTable products={products} setProducts={setProducts} />
       </div>
-      <div className="flex-1 w-1/3 p-4 border-l">
+
+      <div className="w-1/3 flex-1 border-l p-4">
         <OrderInfo
           products={products}
           selectedCustomer={selectedCustomer}
-          setSelectedCustomer={setSelectedCustomer}
-          setBatchName={setBatchName}
-          setExpiryDate={setExpiryDate}
+          selectedAddress={selectedAddress}
           setNote={setNote}
-          setLocation={setLocation}
-          setEmployeeId={setEmployeeId}
-          batchName={batchName}
-          expiryDate={expiryDate}
           note={note}
-          location={location}
-          employeeId={employeeId}
         />
         <div className="mt-4">
           <ActionButtons handleComplete={handleComplete} />

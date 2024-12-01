@@ -18,6 +18,10 @@ export default function DefaultLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
+
+    
+   
+  
     // Tạo script để tải Coze SDK
     const sdkScript = document.createElement("script");
     sdkScript.src = "https://sf-cdn.coze.com/obj/unpkg-va/flow-platform/chat-app-sdk/1.0.0-beta.4/libs/oversea/index.js";
@@ -28,7 +32,7 @@ export default function DefaultLayout({
       if (window.CozeWebSDK) {
         new window.CozeWebSDK.WebChatClient({
           config: {
-            bot_id: '7432590346132996097',
+            bot_id: '7443484404548763655',
           },
           componentProps: {
             title: 'Trợ lý kho',
