@@ -9,6 +9,7 @@ import API_ROUTES from '@/utils/apiRoutes'; // Import API_ROUTES
 import Swal from 'sweetalert2';
 import { format } from 'date-fns';
 import { useEmployeeStore } from '@/stores/employeeStore';
+import { handlePrintPDF } from '../PDF/chkInventory_PDF';
 
 
 
@@ -247,7 +248,7 @@ const TableReceipt = () => {
                   {checkInventoryDetails.map((detail) => (
 
                     <div  key={detail.batchDetail.id} className="grid grid-cols-12 gap-4 py-2 border-b border-stroke">
-                      <div className="col-span-4 px-6 text-blue-500 font-bold">MHK000{detail.batchDetail.id}</div>
+                      <div className="col-span-4 px-6 text-blue-500 font-bold">MMH000{detail.productId}</div>
                       <div className="col-span-2">{detail.batchDetail.batch.batchName}</div>
                       <div className="col-span-2">{detail.inventory}</div>
                       <div className="col-span-2">{detail.actualQuantity}</div>
@@ -278,6 +279,12 @@ const TableReceipt = () => {
                       onClick={() => handleCancelCheckInventory(checkInventory.id)}
                     >
                       Hủy
+                    </button>
+                    <button
+                      className="ml-2 rounded bg-green-600 px-4 py-2 text-white"
+                      onClick={() => handlePrintPDF(checkInventory, checkInventoryDetails)} // Gọi hàm in PDF
+                    >
+                      In PDF
                     </button>
                   </div>
                 </div>

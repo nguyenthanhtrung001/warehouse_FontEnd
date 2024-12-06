@@ -10,6 +10,7 @@ import Swal from "sweetalert2";
 import { encrypt } from "@/utils/cryptoUtils";
 import { format } from "date-fns";
 import { useEmployeeStore } from "@/stores/employeeStore";
+import { handlePrintPDF } from "@/components/PDF/order_PDF";
 
 const TableInvoice = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -76,10 +77,10 @@ const TableInvoice = () => {
   useEffect(() => {
     const handler = setTimeout(() => {
       fetchInvoices();
-    }, 500);  // Delay 500ms sau khi người dùng gõ
-  
+    }, 500); // Delay 500ms sau khi người dùng gõ
+
     return () => {
-      clearTimeout(handler);  // Xóa bỏ khi người dùng nhập tiếp
+      clearTimeout(handler); // Xóa bỏ khi người dùng nhập tiếp
     };
   }, [searchTerm]);
 
@@ -147,6 +148,7 @@ const TableInvoice = () => {
     const encryptedId = encrypt(invoiceId.toString());
     router.push(`/order/confirm?orderId=${encodeURIComponent(encryptedId)}`);
   };
+
   return (
     <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark ">
       <div className="px-4 py-6 md:px-6 xl:px-7.5">
@@ -353,6 +355,12 @@ const TableInvoice = () => {
                       className="mt-4 rounded bg-red px-4 py-2 text-white"
                     >
                       Hủy Đơn
+                    </button>
+                    <button
+                      className="ml-2 rounded bg-green-600 px-4 py-2 text-white"
+                      onClick={() => handlePrintPDF(invoice, invoiceDetails)} // Gọi hàm in PDF
+                    >
+                      In PDF
                     </button>
                   </div>
                 </div>

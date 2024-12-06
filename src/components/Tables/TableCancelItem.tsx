@@ -10,6 +10,7 @@ import Swal from "sweetalert2";
 import { format } from "date-fns";
 import { useEmployeeStore } from "@/stores/employeeStore";
 import SearchInput from "../Search/SearchInputProps";
+import { handlePrintPDF } from "../PDF/cancelItem_PDF";
 
 const TableCancelItem = () => {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
@@ -342,6 +343,12 @@ const TableCancelItem = () => {
                     >
                       Hủy
                     </button>
+                    <button
+                      className="ml-2 rounded bg-green-600 px-4 py-2 text-white"
+                      onClick={() => handlePrintPDF(receipt, CancelDetails)} // Gọi hàm in PDF
+                    >
+                      In PDF
+                    </button>
                   </div>
                 </div>
               </div>
@@ -372,8 +379,10 @@ const TableCancelItem = () => {
           Sau
         </button>
       </div>
+      
     </div>
   );
+  
 };
 
 export default TableCancelItem;

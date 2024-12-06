@@ -17,12 +17,12 @@ export default function DefaultLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  useEffect(() => {
+  // Cập nhật conversationId mỗi khi người dùng hoặc nhân viên tham gia một kênh mới
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
-    
-   
-  
+  useEffect(() => {
     // Tạo script để tải Coze SDK
+    
     const sdkScript = document.createElement("script");
     sdkScript.src = "https://sf-cdn.coze.com/obj/unpkg-va/flow-platform/chat-app-sdk/1.0.0-beta.4/libs/oversea/index.js";
     sdkScript.defer = true;
@@ -30,24 +30,63 @@ export default function DefaultLayout({
     // Khởi tạo Coze Web Chat Client sau khi SDK đã được tải
     sdkScript.onload = () => {
       if (window.CozeWebSDK) {
-        new window.CozeWebSDK.WebChatClient({
+        // Tạo conversationId cho kênh mới
+        const newConversationId = generateNewConversationId(); // Hàm này sẽ tạo ra ID cho kênh mới
+
+        setConversationId(newConversationId);
+
+        // Khởi tạo Coze Web Chat Client với các cấu hình
+        const cozeWebSDK = new window.CozeWebSDK.WebChatClient({
           config: {
-            bot_id: '7443484404548763655',
+            botId: '7444861346590113800',
+            conversationId: newConversationId, // Đặt conversationId mới cho mỗi kênh
+            auto_save_history: false, // Tắt lưu trữ lịch sử
+          },
+          auth: {
+            type: 'token',
+            token: 'pat_ZjdPxxWjqF5XJpib2SFAyvK7hwqSfAzjyUjxM5W4hk3gDzqKiGT6uv9n6q7tcLiD',
+            onRefreshToken: async () => 'pat_ZjdPxxWjqF5XJpib2SFAyvK7hwqSfAzjyUjxM5W4hk3gDzqKiGT6uv9n6q7tcLiD',
+          },
+          userInfo: {
+            id: '1234894',
+            url: 'https://example.com/avatar.png',
+            nickname: 'John Doe',
           },
           componentProps: {
-            title: 'Trợ lý kho',
+            title: 'Trợ lý kho 1',
+            themeColor: '#ff6600',
           },
+          footer: {
+            isShow: true,
+            expressionText: 'Powered by {{name}}',
+            linkvars: {
+              name: {
+                text: 'Trung',
+                link: 'https://www.test1.com'
+              }
+            }
+          }
         });
+        console.log("chat: ",cozeWebSDK)
+
+        // Khi bạn muốn hủy hoặc đóng cuộc trò chuyện
+        // cozeWebSDK.destroy(); // Hủy chat khi cần thiết
       }
     };
 
     // Thêm script vào DOM
     document.body.appendChild(sdkScript);
 
+    // Cleanup khi component unmounts
     return () => {
-      document.body.removeChild(sdkScript); // Cleanup khi component unmounts
+      document.body.removeChild(sdkScript);
     };
-  }, []);
+  }, []); // Chỉ chạy 1 lần khi component mount
+
+  // Hàm tạo mới conversationId
+  const generateNewConversationId = () => {
+    return 'conv_' + new Date().getTime(); // Tạo conversationId bằng thời gian hiện tại (hoặc bạn có thể sử dụng phương thức khác)
+  };
 
   return (
     <>

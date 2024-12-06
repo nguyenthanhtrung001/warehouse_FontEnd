@@ -10,6 +10,7 @@ import Swal from "sweetalert2";
 import { format } from "date-fns";
 import { useEmployeeStore } from "@/stores/employeeStore";
 import SearchInput from "../Search/SearchInputProps";
+import { handlePrintPDF } from "../PDF/receipt_PDF";
 
 const TableReceipt = () => {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
@@ -232,6 +233,7 @@ const TableReceipt = () => {
                     <label className="mb-2 block  py-2 text-2xl font-bold text-blue-500 dark:text-white">
                       Thông tin
                     </label>
+
                     <ul className="list-none p-2">
                       <li className="border-gray-300 mb-2 border-b pb-2">
                         Mã nhập hàng:{" "}
@@ -361,6 +363,12 @@ const TableReceipt = () => {
                           Hủy
                         </button>
                       )}{" "}
+                    <button
+                      className="ml-2 rounded bg-green-600 px-4 py-2 text-white"
+                      onClick={() => handlePrintPDF(receipt, receiptDetails)} // Gọi hàm in PDF
+                    >
+                      In PDF
+                    </button>
                   </div>
                 </div>
               </div>

@@ -9,6 +9,7 @@ import axiosInstance from "@/utils/axiosInstance";
 import { format } from "date-fns";
 import Swal from "sweetalert2";
 import { useEmployeeStore } from "@/stores/employeeStore";
+import { handlePrintPDF } from "../PDF/return_order_PDF";
 
 const TableReturnOrder = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -28,24 +29,25 @@ const TableReturnOrder = () => {
     if (!employee || !employee.warehouseId) return;
     try {
       const response = await axiosInstance.get(
-        API_ROUTES.INVOICES_BY_STATUS(3, employee?.warehouseId),
-      );
+        `http://localhost:8888/v1/api/return-notes/warehouse/1`);
+        console.log("data: ",response.data)
       const invoiceList = response.data
         .filter((item: any) => {
-          const printDate = new Date(item.printDate);
+          const returnDate = new Date(item.returnDate);
           const searchLower = searchTerm.toLowerCase();
           return (
-            (!startDate || printDate >= startDate) &&
-            (!endDate || printDate <= endDate) &&
+            (!startDate || returnDate >= startDate) &&
+            (!endDate || returnDate <= endDate) &&
             (item.id.toString().includes(searchTerm) ||
               searchLower === "" ||
-              item.customer.customerName.toLowerCase().includes(searchLower))
+              item.invoice.contactInfo.toLowerCase().includes(searchLower))
           );
         })
         .map((item: any) => ({
           id: item.id,
-          printDate: new Date(item.printDate),
-          contactInfo: item.contactInfo,
+          returnDate: new Date(item.returnDate),
+          contactInfo: item.invoice.contactInfo,
+          invoice: item.invoice,
           // customerName: item.customer.customerName,
           // phoneNumber: item.customer.phoneNumber,
           // address: item.customer.address,
@@ -80,17 +82,18 @@ const TableReturnOrder = () => {
       clearTimeout(handler); // Xóa bỏ khi người dùng nhập tiếp
     };
   }, [searchTerm]);
-  const handleInvoiceClick = async (invoice: any) => {
+  const handleInvoiceClick = async (returnNote: any) => {
     try {
-      if (selectedInvoice && selectedInvoice.id === invoice.id) {
+      if (selectedInvoice && selectedInvoice.id === returnNote.id) {
         setSelectedInvoice(null);
         setInvoiceDetails([]);
       } else {
+        console.error("trung" , returnNote.invoice.id);
         const response = await axiosInstance.get(
-          API_ROUTES.RETURN_DETAILS_BY_INVOICE_ID(invoice.id),
+          API_ROUTES.RETURN_DETAILS_BY_INVOICE_ID(returnNote.invoice.id),
         );
         setInvoiceDetails(response.data);
-        setSelectedInvoice(invoice);
+        setSelectedInvoice(returnNote);
       }
     } catch (error) {
       console.error("Error fetching invoice details: ", error);
@@ -190,69 +193,69 @@ const TableReturnOrder = () => {
           <div className="col-span-2 ml-4 font-medium">Mã hóa đơn</div>
           <div className="col-span-3 font-medium">Thời gian</div>
           <div className="col-span-3 font-medium">Thông tin đơn hàng</div>
-          <div className="col-span-2 font-medium">Tổng tiền</div>
+          <div className="col-span-2 font-medium">Tổng tiền trả</div>
           <div className="col-span-2 font-medium">Trạng thái</div>
         </div>
       </div>
 
-      {paginatedInvoices.map((invoice) => (
-        <React.Fragment key={invoice.id}>
+      {paginatedInvoices.map((returnNote) => (
+        <React.Fragment key={returnNote.id}>
           <div className="border-gray-200 container mx-auto mb-1 border-b p-1 px-4 text-black">
             <div className="grid grid-cols-12 gap-4">
               <div
                 className="col-span-2 ml-4 flex flex-col gap-4 sm:flex-row sm:items-center"
-                onClick={() => handleInvoiceClick(invoice)}
+                onClick={() => handleInvoiceClick(returnNote)}
               >
                 <p className="mr-3 text-sm font-bold text-black text-blue-800 dark:text-white">
-                  HD000{invoice.id}
+                  TH000{returnNote.id}
                 </p>
               </div>
               <div className="col-span-3">
                 <p className="mt-2 text-sm text-black dark:text-white">
-                  {format(invoice.printDate, "dd/MM/yyyy - HH:mm:ss")}
+                  {format(returnNote.returnDate, "dd/MM/yyyy - HH:mm:ss")}
                 </p>
               </div>
               <div className="col-span-3">
                 <p className="mt-2 text-sm text-black dark:text-white">
-                  {invoice.contactInfo}
+                  {returnNote.contactInfo}
                 </p>
               </div>
               <div className="col-span-2">
                 <p className="mt-2 text-sm text-black dark:text-white">
-                  {formatCurrency(invoice.price)}
+                  {formatCurrency(returnNote.price)}
                 </p>
               </div>
               <div className="col-span-2">
-                <p className="text-sm text-meta-3">{invoice.status}</p>
+                <p className="text-sm text-meta-3">{returnNote.status}</p>
               </div>
             </div>
           </div>
 
-          {selectedInvoice && selectedInvoice.id === invoice.id && (
+          {selectedInvoice && selectedInvoice.id === returnNote.id && (
             <div className="text-xm border border-blue-700 px-4 py-4.5 text-black dark:border-strokedark md:px-6  2xl:px-7.5">
               <div className="container mx-auto px-4">
                 <div className="grid grid-cols-12 gap-4">
                   <div className="col-span-4">
                     <label className="mb-2 block p-2 text-2xl font-bold text-blue-800 dark:text-black">
-                      Thông tin
+                      Thông tin  TH000{selectedInvoice.id}
                     </label>
                     <ul className="list-none p-0">
                       <li className="border-gray-300 mb-2 border-b pb-2">
                         Mã hóa đơn:{" "}
                         <span className="font-bold text-blue-700">
-                          HD000{selectedInvoice.id}
+                          HD000{selectedInvoice.invoice.id}
                         </span>
                       </li>
                       <li className="border-gray-300 mb-2 border-b pb-2">
                         Thời gian:{" "}
                         <span className="font-bold">
-                          {format(invoice.printDate, "dd/MM/yyyy - HH:mm:ss")}
+                          {format(returnNote.returnDate, "dd/MM/yyyy - HH:mm:ss")}
                         </span>
                       </li>
                       <li className="border-gray-300 mb-2 border-b pb-2">
                         Trạng thái:{" "}
                         <span className="font-bold text-blue-500">
-                          {invoice.status}
+                          {returnNote.status}
                         </span>
                       </li>
                     </ul>
@@ -261,7 +264,7 @@ const TableReturnOrder = () => {
                     <ul className="list-none p-0">
                       <li className="border-gray-300 mb-2 border-b pb-4">
                         Thông tin đơn hàng: <br />{" "}
-                        <span className="font-bold">{invoice.contactInfo}</span>
+                        <span className="font-bold">{returnNote.contactInfo}</span>
                       </li>
                     </ul>
                   </div>
@@ -269,12 +272,12 @@ const TableReturnOrder = () => {
                     <ul className="list-none p-0">
                       <li className="border-gray-300 mb-2 border-b pb-2">
                         Ghi chú:{" "}
-                        <span className="font-bold">{invoice.note}</span>
+                        <span className="font-bold">{returnNote.note}</span>
                       </li>
                       <li className="border-gray-300 mb-2 border-b pb-2">
                         Người tạo hóa đơn:{" "}
                         <span className="font-bold">
-                          NV000{invoice.employee}
+                          NV000{returnNote.employee}
                         </span>
                       </li>
                     </ul>
@@ -324,7 +327,7 @@ const TableReturnOrder = () => {
                           <span className="ml-3 font-bold">{totalItems}</span>
                         </li>
                         <li className="border-gray-300 mb-2 border-b pb-2">
-                          Tổng tiền:{" "}
+                          Tổng tiền trả:{" "}
                           <span className="ml-3 font-bold text-blue-500">
                             {formatCurrency(totalPrice)}
                           </span>
@@ -337,14 +340,22 @@ const TableReturnOrder = () => {
                 <div className="mt-3 grid grid-cols-12 py-6">
                   <div className="col-span-8"></div>
                   <div className="col-span-4 flex justify-end px-2 font-bold">
-                    {invoice.status === "Tồn tại trả" && (
+                    {returnNote.status === "Tồn tại trả" && (
                       <button
-                        onClick={() => handleCancel(invoice.id)}
+                        onClick={() => handleCancel(returnNote.id)}
                         className="mr-2 w-30 rounded bg-red px-4 py-2 text-white"
                       >
                         Hủy trả
                       </button>
+                      
+                      
                     )}
+                      <button
+                      className="ml-2 rounded bg-green-600 px-4 py-2 text-white"
+                      onClick={() => handlePrintPDF(returnNote, invoiceDetails)} // Gọi hàm in PDF
+                    >
+                      In PDF
+                    </button>
                   </div>
                 </div>
               </div>

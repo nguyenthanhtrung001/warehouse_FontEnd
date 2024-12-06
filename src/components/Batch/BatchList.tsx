@@ -20,6 +20,7 @@ import {
   TextField,
   MenuItem,
 } from "@mui/material";
+import { useEmployeeStore } from "@/stores/employeeStore";
 
 export default function BatchList() {
   const [batches, setBatches] = useState<Batch[]>([]); // Dữ liệu các lô hàng
@@ -35,15 +36,21 @@ export default function BatchList() {
   const [expiryFilter, setExpiryFilter] = useState<string>("all"); // Bộ lọc hạn sử dụng
 
   const itemsPerPage = 5; // Số lô hàng trên mỗi trang
+  const { employee } = useEmployeeStore();
 
   // Lấy dữ liệu từ API
   useEffect(() => {
     const fetchBatches = async () => {
+      if (!employee) {
+       
+        return;
+      }
       setLoading(true);
       setError(null);
+      console.log("data:",employee.warehouseId);
       try {
         const response = await axios.get(
-          `http://localhost:8888/v1/api/batches/in-warehouse/3`
+          `http://localhost:8888/v1/api/batches/in-warehouse/${employee.warehouseId}`
         );
 
         const fetchedBatches = response.data || []; // Đảm bảo mảng dữ liệu
@@ -61,7 +68,7 @@ export default function BatchList() {
     };
 
     fetchBatches();
-  }, []);
+  }, [employee]);
 
   // Lọc và tìm kiếm lô hàng
   useEffect(() => {
