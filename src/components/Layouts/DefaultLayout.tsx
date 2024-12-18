@@ -1,9 +1,9 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-
+import { useEmployeeStore } from "@/stores/employeeStore";
+import axios from "@/utils/axiosInstance";
 declare global {
   interface Window {
     CozeWebSDK: any;
@@ -16,76 +16,84 @@ export default function DefaultLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { employee } = useEmployeeStore();
 
-  // Cập nhật conversationId mỗi khi người dùng hoặc nhân viên tham gia một kênh mới
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [chatConfig, setChatConfig] = useState<any>(null);
 
   useEffect(() => {
-    // Tạo script để tải Coze SDK
-    
-    const sdkScript = document.createElement("script");
-    sdkScript.src = "https://sf-cdn.coze.com/obj/unpkg-va/flow-platform/chat-app-sdk/1.0.0-beta.4/libs/oversea/index.js";
-    sdkScript.defer = true;
-
-    // Khởi tạo Coze Web Chat Client sau khi SDK đã được tải
-    sdkScript.onload = () => {
-      if (window.CozeWebSDK) {
-        // Tạo conversationId cho kênh mới
-        const newConversationId = generateNewConversationId(); // Hàm này sẽ tạo ra ID cho kênh mới
-
-        setConversationId(newConversationId);
-
-        // Khởi tạo Coze Web Chat Client với các cấu hình
-        const cozeWebSDK = new window.CozeWebSDK.WebChatClient({
-          config: {
-            botId: '7444861346590113800',
-            conversationId: newConversationId, // Đặt conversationId mới cho mỗi kênh
-            auto_save_history: false, // Tắt lưu trữ lịch sử
-          },
-          auth: {
-            type: 'token',
-            token: 'pat_ZjdPxxWjqF5XJpib2SFAyvK7hwqSfAzjyUjxM5W4hk3gDzqKiGT6uv9n6q7tcLiD',
-            onRefreshToken: async () => 'pat_ZjdPxxWjqF5XJpib2SFAyvK7hwqSfAzjyUjxM5W4hk3gDzqKiGT6uv9n6q7tcLiD',
-          },
-          userInfo: {
-            id: '1234894',
-            url: 'https://example.com/avatar.png',
-            nickname: 'John Doe',
-          },
-          componentProps: {
-            title: 'Trợ lý kho 1',
-            themeColor: '#ff6600',
-          },
-          footer: {
-            isShow: true,
-            expressionText: 'Powered by {{name}}',
-            linkvars: {
-              name: {
-                text: 'Trung',
-                link: 'https://www.test1.com'
-              }
-            }
-          }
-        });
-        console.log("chat: ",cozeWebSDK)
-
-        // Khi bạn muốn hủy hoặc đóng cuộc trò chuyện
-        // cozeWebSDK.destroy(); // Hủy chat khi cần thiết
+    const fetchChatConfig = async () => {
+      try {
+        const response = await axios.get("http://localhost:8888/v1/identity/api/settings/chat-config");
+        const configData = response.data.reduce((acc: any, curr: any) => {
+          acc[curr.configKey] = curr.configValue; // Biến đổi mảng thành đối tượng với key là configKey
+          return acc;
+        }, {});
+        setChatConfig(configData); // Lưu cấu hình vào state
+      } catch (error) {
+        console.error("Error fetching chat config", error);
       }
     };
 
-    // Thêm script vào DOM
+    fetchChatConfig();
+  }, []);
+
+  useEffect(() => {
+    if (!chatConfig || !employee) return;
+
+    const sdkScript = document.createElement("script");
+    sdkScript.src = chatConfig.script; // Sử dụng cấu hình script từ API
+    sdkScript.defer = true;
+
+    sdkScript.onload = () => {
+      if (window.CozeWebSDK) {
+        const newConversationId = generateNewConversationId();
+        setConversationId(newConversationId);
+
+        const cozeWebSDK = new window.CozeWebSDK.WebChatClient({
+          config: {
+            botId: chatConfig.botId,  // Lấy botId từ cấu hình API
+            conversationId: newConversationId,
+            auto_save_history: false,
+          },
+          // auth: {
+          //   type: "token",
+          //   token: chatConfig.token,  // Lấy token từ cấu hình API
+          //   onRefreshToken: async () => chatConfig.token,
+          // },
+          userInfo: {
+            id: employee?.accountId,
+            url: "https://example.com/avatar.png",
+            nickname: employee?.employeeName,
+          },
+          componentProps: {
+            title: chatConfig.chatTitle,  // Lấy chatTitle từ cấu hình API
+            themeColor: "#ff6600",
+          },
+          footer: {
+            isShow: true,
+            expressionText: "Powered by {{name}}",
+            linkvars: {
+              name: {
+                text: "Trung",
+                link: "https://www.test1.com",
+              },
+            },
+          },
+        });
+        console.log("chat: ", cozeWebSDK);
+      }
+    };
+
     document.body.appendChild(sdkScript);
 
-    // Cleanup khi component unmounts
     return () => {
       document.body.removeChild(sdkScript);
     };
-  }, []); // Chỉ chạy 1 lần khi component mount
+  }, [chatConfig, employee]);
 
-  // Hàm tạo mới conversationId
   const generateNewConversationId = () => {
-    return 'conv_' + new Date().getTime(); // Tạo conversationId bằng thời gian hiện tại (hoặc bạn có thể sử dụng phương thức khác)
+    return "conv_" + new Date().getTime(); // Tạo conversationId bằng thời gian hiện tại
   };
 
   return (

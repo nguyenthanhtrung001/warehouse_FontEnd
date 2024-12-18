@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import API_ROUTES from '@/utils/apiRoutes'; // Import API routes từ cấu hình
 import axiosInstance from '@/utils/axiosInstance';
 import Swal from 'sweetalert2';
+import axios from 'axios';
 
 
 const FormAddSupplier: React.FC = () => {
@@ -43,6 +44,7 @@ const FormAddSupplier: React.FC = () => {
         ...formData,
         id: parseInt(formData.id, 10), // Chuyển đổi id về số khi gửi lên API
       };
+      console.log("Data: ", JSON.stringify(payload, null, 2))
 
       await axiosInstance.post(API_ROUTES.SUPPLIERS, payload);
 
@@ -60,12 +62,25 @@ const FormAddSupplier: React.FC = () => {
     } catch (error) {
       console.error("Error submitting form: ", error);
 
-      // Thông báo thất bại với Swal
-      await Swal.fire({
-        title: 'Lỗi!',
-        text: 'Đã xảy ra lỗi khi thêm nhà cung cấp.',
-        icon: 'error',
-      });
+      // Kiểm tra xem lỗi có phải từ Axios không và lấy thông tin lỗi
+      if (axios.isAxiosError(error) && error.response) {
+        // Lấy thông tin lỗi từ response
+        const errorMessage = error.response.data?.message || 'Đã xảy ra lỗi khi thêm nhà cung cấp.';
+        
+        // Thông báo lỗi với Swal
+        await Swal.fire({
+          title: 'Lỗi!',
+          text: errorMessage, // Hiển thị thông báo lỗi từ API
+          icon: 'error',
+        });
+      } else {
+        // Nếu không phải lỗi từ API, thông báo lỗi chung
+        await Swal.fire({
+          title: 'Lỗi!',
+          text: 'Đã xảy ra lỗi không xác định.',
+          icon: 'error',
+        });
+      }
     }
   };
 

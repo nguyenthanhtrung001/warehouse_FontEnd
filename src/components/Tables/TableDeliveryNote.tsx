@@ -37,14 +37,14 @@ const TableDeliveryNote = () => {
           return {
             id: item.id,
             date: new Date(item.deliveryDate),
-            supplier: item.receipt.supplier.supplierName,
+            supplier: item.receipt.supplier?.supplierName,
             price: item.price,
             status: item.status === 1 ? "Đã trả" : "Đã hủy",
             employee: item.employeeId,
           };
         }),
       );
-
+      receiptList.sort((a, b) => b.date.getTime() - a.date.getTime());
       // Lọc các phiếu dựa trên từ khóa tìm kiếm
       const filteredReceipts = receiptList.filter((receipt) => {
         const searchTermLower = searchTerm.toLowerCase();
@@ -149,15 +149,15 @@ const TableDeliveryNote = () => {
               placeholder="Nhập mã hóa đơn hoặc tên khách hàng"
             />
           </div>
-          <div className="col-span-3 flex justify-end  font-bold">
+          <div className="col-span-3 flex justify-end  font-bold ">
             <Link href="/deliverynotes/add">
               <button className="rounded bg-green-600 px-4 py-2 text-white">
                 Trả hàng nhập
               </button>
             </Link>
-            <button className="ml-2 rounded bg-green-600 px-4 py-2 text-white">
+            {/* <button className="ml-2 rounded bg-green-600 px-4 py-2 text-white">
               In PDF
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

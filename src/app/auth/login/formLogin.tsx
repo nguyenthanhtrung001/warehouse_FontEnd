@@ -3,8 +3,12 @@ import React, { useState } from "react";
 import DefaultLayout from "@/components/Layouts/LoginLayout";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
-import { fetchUserInfo, fetchUserName, fetchEmployeeByAccountId } from '@/utils/api';
-import { useUserStore } from '@/stores/userStore';
+import {
+  fetchUserInfo,
+  fetchUserName,
+  fetchEmployeeByAccountId,
+} from "@/utils/api";
+import { useUserStore } from "@/stores/userStore";
 
 const SignIn: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -12,7 +16,7 @@ const SignIn: React.FC = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const userName = useUserStore(state => state.userName);
+  const userName = useUserStore((state) => state.userName);
   const userExists = !!userName;
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -20,19 +24,17 @@ const SignIn: React.FC = () => {
     setLoading(true);
     setError("");
 
-    console.log("Dữ liệu gửi đi:", {
-      username,
-      password,
-    });
-
     try {
-      const response = await fetch("http://localhost:8888/v1/identity/auth/token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        "http://localhost:8888/v1/identity/auth/token",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ username, password }),
         },
-        body: JSON.stringify({ username, password }),
-      });
+      );
 
       const data = await response.json();
 
@@ -45,9 +47,9 @@ const SignIn: React.FC = () => {
         const userName = await fetchUserName();
 
         // Kiểm tra role và điều hướng trang phù hợp
-        if (userRole === 'ADMIN') {
+        if (userRole === "ADMIN") {
           router.push("/admin/dashboard-admin");
-        } else if (userRole === 'MANAGER') {
+        } else if (userRole === "MANAGER") {
           router.push("/dashboard");
         } else {
           router.push("/invoice");
@@ -68,7 +70,7 @@ const SignIn: React.FC = () => {
   return (
     <DefaultLayout>
       <div
-        className="flex justify-center items-center py-20"
+        className="flex items-center justify-center py-20"
         style={{
           backgroundImage: "url('/images/logo/Login.png')",
           backgroundSize: "cover",
@@ -77,10 +79,10 @@ const SignIn: React.FC = () => {
           height: "100vh",
         }}
       >
-        <div className="w-4/5 max-w-md px-4 py-10 bg-white rounded-xl shadow-lg border border-stroke bg-transparent">
+        <div className="w-4/5 max-w-md rounded-xl border border-stroke bg-transparent bg-white px-4 py-10 shadow-lg">
           <span className="mb-1.5 block font-medium">Quản lý kho hàng</span>
-          <h2 className="mb-9 text-2xl font-bold text-black dark:text-white sm:text-title-xl2 text-center">
-            ĐĂNG NHẬP  
+          <h2 className="mb-9 text-center text-2xl font-bold text-black dark:text-white sm:text-title-xl2">
+            ĐĂNG NHẬP
           </h2>
 
           <form onSubmit={handleSubmit}>
@@ -114,7 +116,7 @@ const SignIn: React.FC = () => {
               </div>
             </div>
 
-            {error && <div className="mb-4 text-red-500">{error}</div>}
+            {error && <div className="text-red-500 mb-4">{error}</div>}
 
             <div className="mb-5">
               <input

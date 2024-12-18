@@ -501,14 +501,14 @@ const AccountManagement = () => {
           ))}
         </Select>
       </FormControl>
-      <TextField
+      {/* <TextField
         fullWidth
         type="password"
         label="Xác nhận mật khẩu"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         sx={{ mb: 3 }}
-      />
+      /> */}
       <Box display="flex" justifyContent="flex-end" gap={1}>
         <Button variant="outlined" color="secondary" onClick={handleCloseModal}>
           Hủy

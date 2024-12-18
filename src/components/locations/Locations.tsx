@@ -20,7 +20,7 @@ export default function LocationPage() {
 
   useEffect(() => {
     fetchLocations();
-  }, []);
+  }, [employee]);
 
   // Lấy danh sách vị trí
   const fetchLocations = async () => {
@@ -97,7 +97,7 @@ export default function LocationPage() {
       // Thêm thuộc tính vào locationData
       const updatedLocationData = {
         ...locationData,
-        warehouseId: 3,
+        warehouseId: employee?.warehouseId,
       };
   
       const result = await Swal.fire({

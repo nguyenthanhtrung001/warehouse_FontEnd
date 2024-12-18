@@ -1,6 +1,6 @@
 // components/OrderInfo.tsx
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Product } from "@/types/product";
 import axios from "@/utils/axiosInstance";
 import API_ROUTES from "@/utils/apiRoutes"; // Import API_ROUTES
@@ -10,6 +10,8 @@ import FormAddSupplier from "@/components/FormElements/supplier/AddSupplierForm"
 import { useEmployeeStore,  initializeEmployeeFromLocalStorage,} from "@/stores/employeeStore";
 import { Location } from "@/types/Location";
 import { toast } from "react-toastify";
+import CurrentTime from '@/utils/currentTime';
+import Swal from "sweetalert2";
 
 interface OrderInfoProps {
   products: Product[];
@@ -79,52 +81,81 @@ const OrderInfo: React.FC<OrderInfoProps> = ({
     setGlobalValue(totalQuantity);
     setTotalPrice(total);
     setAmountDue(total); // Bạn có thể điều chỉnh tính toán cần trả nhà cung cấp dựa vào logic của bạn
-  }, [products]);
+  }, [products,globalValue]);
 
-  useEffect(() => {
-    // Fetch suppliers from API
-    const fetchSuppliers = async () => {
-      try {
-        const response = await axios.get<Supplier[]>(API_ROUTES.SUPPLIERS);
-        console.log("Fetched suppliers:", response.data); // Log data received from API
-        setSuppliers(response.data);
-      } catch (error) {
-        console.error("Error fetching suppliers:", error);
-      }
-    };
-
-    fetchSuppliers();
+  const fetchSuppliers = useCallback(async () => {
+    try {
+      const response = await axios.get<Supplier[]>(API_ROUTES.SUPPLIERS);
+      console.log("Fetched suppliers:", response.data);
+      setSuppliers(response.data);
+     
+    } catch (error) {
+      console.error("Error fetching suppliers:", error);
+    }
   }, []);
+  
 
   // Mở modal để thêm vị trí mới
-  const handleAdd = () => {
+  const handleAdd = async () => {
     setSelectedLocation(undefined);
     setIsModalOpen(true);
+    await fetchSuppliers(); 
   };
-  const handleSave = async (locationData: Omit<Location, "id">) => {
+ 
+
+const handleSave = async (locationData: Omit<Location, "id">) => {
+  console.log("Data location before update: ", JSON.stringify(locationData, null, 2));
+
+  // Định nghĩa lại warehouseId
+  const updatedLocationData = {
+    ...locationData,
+    warehouseId: employee?.warehouseId, // Thay thế bằng giá trị warehouseId mới
+  };
+
+  console.log("Data location after update: ", JSON.stringify(updatedLocationData, null, 2));
+
+  try {
+    // Gửi dữ liệu POST
+    await axios.post("http://localhost:8888/v1/api/locations", updatedLocationData);
+
+    // Hiển thị thông báo thành công
+    Swal.fire({
+      title: "Thành công!",
+      text: "Đã lưu vị trí kho với Warehouse ID mới thành công.",
+      icon: "success",
+      confirmButtonText: "OK",
+    });
+
+    setIsModalOpen(false); // Đóng modal sau khi lưu thành công
+  } catch (error) {
+    console.error("Error saving location:", error);
+
+    // Hiển thị thông báo thất bại
+    Swal.fire({
+      title: "Thất bại!",
+      text: "Không thể lưu vị trí kho. Vui lòng thử lại.",
+      icon: "error",
+      confirmButtonText: "OK",
+    });
+  }
+};
+
+
+  const fetchLocations = useCallback(async () => {
     try {
-      await axios.post("/locations", locationData);
-      setIsModalOpen(false); // Đóng modal sau khi lưu thành công
+      if (!employee || !employee.warehouseId) return;
+      const response = await axios.get<Location[]>(`http://localhost:8888/v1/api/locations/warehouse/${employee?.warehouseId}`);
+      console.log("Fetched locations:", response.data); 
+      setLocations(response.data);
     } catch (error) {
-      console.error("Error saving location:", error);
+      console.error("Error fetching locations:", error);
     }
-  };
+  }, [employee,]);
 
   useEffect(() => {
-    // Fetch locations from API
-    const fetchLocations = async () => {
-      try {
-        if (!employee || !employee.warehouseId) return;
-        const response = await axios.get<Location[]>(`http://localhost:8888/v1/api/locations/warehouse/${employee?.warehouseId}`);
-        console.log("Fetched locations:", response.data); // Log data received from API
-        setLocations(response.data);
-      } catch (error) {
-        console.error("Error fetching locations:", error);
-      }
-    };
-
     fetchLocations();
-  }, []);
+    fetchSuppliers();
+  }, [fetchLocations,fetchSuppliers,globalValue]);
 
   const handleSupplierChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedSupplier(e.target.value);
@@ -176,7 +207,7 @@ const OrderInfo: React.FC<OrderInfoProps> = ({
         ) : (
           <p>No employee data available</p>
         )}
-        <span>{new Date().toLocaleString()}</span>
+         <CurrentTime />
       </div>
       <div className="space-y-4 ">
         <div className="flex justify-between">
@@ -189,7 +220,7 @@ const OrderInfo: React.FC<OrderInfoProps> = ({
           />
         </div>
         <div className="flex justify-between">
-          <label className="font-bold">Tên lô hàng:</label>
+          <label className="font-bold">Tên lô hàng: </label>
           <input
             type="text"
             value={batchName}

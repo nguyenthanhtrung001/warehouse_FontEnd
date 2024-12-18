@@ -8,6 +8,7 @@ import API_ROUTES from '@/utils/apiRoutes'; // Import API routes từ cấu hìn
 import axiosInstance from '@/utils/axiosInstance'
 import { useEmployeeStore } from "@/stores/employeeStore";
 import SearchInput from '../Search/SearchInputProps';
+import Swal from 'sweetalert2';
 
 const TableCustomer = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -21,34 +22,40 @@ const TableCustomer = () => {
   const [paginatedCustomers, setPaginatedCustomers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const fetchCustomers = async () => {
+    try {
+      const response = await axiosInstance.get(API_ROUTES.CUSTOMERS);
+      const allCustomers = response.data;
+
+      // Lọc danh sách khách hàng theo searchTerm
+      const filteredCustomers = allCustomers.filter((customer: Customer) =>
+        customer.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      const sortedCustomers = filteredCustomers.sort(
+        (a: { id: number }, b: { id: number }) => b.id - a.id  // Sắp xếp giảm dần theo id
+      );
+  
+      setCustomers(sortedCustomers);
+
+    
+
+      // Tính toán tổng số trang
+      const total = Math.ceil(filteredCustomers.length / pageSize);
+      setTotalPages(total);
+
+      // Phân trang
+      const startIndex = (currentPage - 1) * pageSize;
+      const paginatedData = filteredCustomers.slice(startIndex, startIndex + pageSize);
+      setPaginatedCustomers(paginatedData);
+
+    } catch (error) {
+      console.error("Error fetching customers: ", error);
+    }
+  };
   useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        const response = await axiosInstance.get(API_ROUTES.CUSTOMERS);
-        const allCustomers = response.data;
-  
-        // Lọc danh sách khách hàng theo searchTerm
-        const filteredCustomers = allCustomers.filter((customer: Customer) =>
-          customer.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          customer.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-  
-        setCustomers(filteredCustomers);
-  
-        // Tính toán tổng số trang
-        const total = Math.ceil(filteredCustomers.length / pageSize);
-        setTotalPages(total);
-  
-        // Phân trang
-        const startIndex = (currentPage - 1) * pageSize;
-        const paginatedData = filteredCustomers.slice(startIndex, startIndex + pageSize);
-        setPaginatedCustomers(paginatedData);
-  
-      } catch (error) {
-        console.error("Error fetching customers: ", error);
-      }
-    };
+   
   
     fetchCustomers();
   }, [currentPage, pageSize, searchTerm]);  // Thêm searchTerm vào dependency array
@@ -80,6 +87,45 @@ const TableCustomer = () => {
     setSelectedCustomer(customer);
     setShowUpdateForm(true);
   };
+  const handleDeleteCustomer = async (customerId: number) => {
+    // Xác nhận trước khi xóa
+    const isConfirmed = await Swal.fire({
+      title: 'Bạn có chắc chắn muốn xóa khách hàng này?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Có, xóa!',
+      cancelButtonText: 'Hủy',
+    });
+  
+    if (!isConfirmed.isConfirmed) return;
+  
+    try {
+      // Gọi API xóa khách hàng
+      await axiosInstance.delete(`${API_ROUTES.CUSTOMERS}/${customerId}`);
+      
+      // Thông báo thành công
+      await Swal.fire({
+        title: 'Thành công!',
+        text: 'Khách hàng đã được xóa thành công!',
+        icon: 'success',
+      });
+  
+      // Cập nhật lại danh sách khách hàng sau khi xóa
+      setCustomers(customers.filter(customer => customer.id !== customerId));
+      fetchCustomers();
+      
+    } catch (error) {
+      console.error("Error deleting customer: ", error);
+  
+      // Thông báo thất bại khi xóa
+      await Swal.fire({
+        title: 'Lỗi!',
+        text: 'Đã xảy ra lỗi khi xóa khách hàng.',
+        icon: 'error',
+      });
+    }
+  };
+  
 
   return (
     <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
@@ -104,7 +150,7 @@ const TableCustomer = () => {
             >
               Thêm mới
             </button>
-            <button className="bg-green-600 text-white px-4 py-2 rounded ml-2">In PDF</button>
+            {/* <button className="bg-green-600 text-white px-4 py-2 rounded ml-2">In PDF</button> */}
           </div>
         </div>
       </div>
@@ -128,12 +174,12 @@ const TableCustomer = () => {
 
       <div className="container mx-auto ">
         <div className="grid grid-cols-12 gap-4 border-t border-stroke px-4 py-4.5 bg-blue-700 text-white font-bold">
-          <div className="col-span-2 ">ID</div>
+          <div className="col-span-1 ">ID</div>
           <div className="col-span-2 ">Tên khách hàng</div>
           <div className="col-span-2 ">Số điện thoại</div>
           <div className="col-span-2 ">Email</div>
           <div className="col-span-2 ">Ngày sinh</div>
-          <div className="col-span-2 ">Hành động</div>
+          <div className="col-span-3 ">Hành động</div>
         </div>
       </div>
 
@@ -141,7 +187,7 @@ const TableCustomer = () => {
         <React.Fragment key={customer.id}>
           <div className="container mx-auto px-4 mb-1 border-b border-gray-200 p-1 text-black">
             <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-2">
+              <div className="col-span-1">
                 <p className="text-sm text-black dark:text-white font-bold text-blue-700 ml-2">KH000{customer.id}</p>
               </div>
               <div className="col-span-2">
@@ -156,7 +202,7 @@ const TableCustomer = () => {
               <div className="col-span-2">
                 <p className="text-sm text-black dark:text-white">{customer.dateOfBirth}</p>
               </div>
-              <div className="col-span-2 ">
+              <div className="col-span-3 ">
                 <button
                   className="bg-blue-500 text-white px-4 py-2 rounded"
                   onClick={() => handleCustomerClick(customer)}
@@ -169,6 +215,13 @@ const TableCustomer = () => {
                 >
                   Cập nhật
                 </button>
+                <button 
+                onClick={() => handleDeleteCustomer(customer.id)} 
+                className="bg-red text-white px-4 py-2 rounded ml-2" 
+               
+              >
+                Xóa
+              </button>
               </div>
             </div>
           </div>

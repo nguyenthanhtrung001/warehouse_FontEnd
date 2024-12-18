@@ -178,7 +178,7 @@ const Table: React.FC<TableProps> = ({ month, year, employee }) => {
         <Text style={[styles.tableHeaderCell, { flex: cellFlexH.nameProduct }]}>Tên hàng</Text>
         <Text style={[styles.tableHeaderCell3, { flex: cellFlexH.import }]}>NHẬP</Text>
         <Text style={[styles.tableHeaderCell4, { flex: cellFlexH.export }]}>XUẤT</Text>
-        <Text style={[styles.tableHeaderCell, { flex: cellFlexH.inventory }]}>Tồn kho</Text>
+        <Text style={[styles.tableHeaderCell, { flex: cellFlexH.inventory }]}>Biến động</Text>
       </View>
       {/* Sub-Header Row */}
       <View style={styles.tableRow}>
@@ -194,7 +194,7 @@ const Table: React.FC<TableProps> = ({ month, year, employee }) => {
         <Text style={[styles.tableHeaderCell4, { flex: cellFlex.export_supplier }]}>NCC</Text>
         <Text style={[styles.tableHeaderCell4, { flex: cellFlex.export_check }]}>Kiểm kho</Text>
         <Text style={[styles.tableHeaderCell4, { flex: cellFlex.transfer }]}>Chuyển</Text>
-        <Text style={[styles.tableHeaderCell, { flex: cellFlex.inventory }]}>Tồn kho</Text>
+        <Text style={[styles.tableHeaderCell, { flex: cellFlex.inventory }]}>Biến động</Text>
       </View>
       {/* Data Rows */}
       {data.map((item, index) => (
@@ -211,7 +211,7 @@ const Table: React.FC<TableProps> = ({ month, year, employee }) => {
           <Text style={[styles.tableCell, { flex: cellFlex.export_supplier }]}>{item.export_supplier}</Text>
           <Text style={[styles.tableCell, { flex: cellFlex.export_check }]}>{Math.abs(item.export_check)}</Text>
           <Text style={[styles.tableCell, { flex: cellFlex.transfer }]}>{Math.abs(item.transfer)}</Text>
-          <Text style={[styles.tableCell, { flex: cellFlex.inventory }]}>{item.inventory}</Text>
+          <Text style={[styles.tableCell, { flex: cellFlex.inventory }]}>  {item.inventory > 0 ? `+${item.inventory}` : item.inventory}</Text>
         </View>
       ))}
       {/* Summary Row */}

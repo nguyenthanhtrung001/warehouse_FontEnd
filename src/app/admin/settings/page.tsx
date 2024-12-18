@@ -2,7 +2,8 @@ import TableProduct from "@/components/Tables/TableProduct";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import { Metadata } from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import TableDeliveryNote from "@/components/Tables/TableCancelItem";
+import ChatSettingCoze from "@/components/FormElements/setting/chatSettingCoze";
+
 
 
 export const metadata: Metadata = {
@@ -19,7 +20,7 @@ const TablesPage = () => {
       <div className="flex flex-col gap-12">
       
         {/* <TableTwo /> */}
-        <TableDeliveryNote/>
+        <ChatSettingCoze/>
           {/* <TableOne />
         <TableThree /> */}
       </div>

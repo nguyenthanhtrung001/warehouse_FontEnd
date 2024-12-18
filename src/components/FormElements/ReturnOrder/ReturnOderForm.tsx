@@ -61,6 +61,7 @@ const Home: React.FC = () => {
 
         // Cập nhật các giá trị trạng thái từ dữ liệu trả về
         setInvoice(firstDetail);
+        
         setProducts(
           data.map((detail: any) => ({
             id: detail.productId,
@@ -73,8 +74,10 @@ const Home: React.FC = () => {
         );
         setInvoice(invoiceId);
         // xem xet lại khách hàng
-        setSelectedCustomer(invoice.customer.id.toString());
-        setCustomer(invoice.customer.customerName.toString());
+        // setSelectedCustomer(invoice.customer.id.toString());
+        console.log(' Data test invoice trung:', invoice.contactInfo.toString()); // Xuất dữ liệu dưới dạng JSON
+
+        setCustomer(invoice.contactInfo.toString());
        
         setNote(firstDetail.note_return || '');
         setEmployeeId(invoice.employeeId);
@@ -183,7 +186,7 @@ const Home: React.FC = () => {
             <Select
               options={allInvoices.map((invoice) => ({
                 value: invoice,
-                label: `HD000${invoice.id} - can fix KH`,
+                label: `HD000${invoice.id} - ${invoice.contactInfo}`,
                 //label: `HD000${invoice.id} - ${invoice.customer.customerName}`,
               }))}
               onChange={handleSearchChange}

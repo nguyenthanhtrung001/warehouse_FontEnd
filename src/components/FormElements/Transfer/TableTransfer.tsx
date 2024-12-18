@@ -55,7 +55,9 @@ const OrderApprovalPage = () => {
     if (!employee || !employee.warehouseId) return;
     axios.get(`http://localhost:8888/v1/api/deliveryNotes/transfer?warehouseId=${employee?.warehouseId}`)
       .then(response => {
-        setOrders(response.data);
+        const sortedOrders = response.data.sort((a: { id: number; }, b: { id: number; }) => b.id - a.id);  // Sắp xếp theo id giảm dần
+        setOrders(sortedOrders);
+        
       })
       .catch(error => {
         console.error("Error fetching transfer orders:", error);

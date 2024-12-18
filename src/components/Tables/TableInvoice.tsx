@@ -8,6 +8,7 @@ import API_ROUTES from '@/utils/apiRoutes'; // Import API routes từ cấu hìn
 import axiosInstance from '@/utils/axiosInstance';
 import { format } from 'date-fns';
 import { useEmployeeStore } from '@/stores/employeeStore';
+import { handlePrintPDF } from "@/components/PDF/invoice_PDF";
 
 const TableInvoice = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -53,8 +54,8 @@ const TableInvoice = () => {
           employee: item.employeeId,
           status: item.status === 2 ? "Đã thanh toán" : "Tồn tại trả",
         }));
-        const sorted = invoiceList.sort(
-          (a: { date: number }, b: { date: number }) => b.date - a.date,
+       const sorted = invoiceList.sort(
+          (a: { printDate: Date }, b: { printDate: Date }) => b.printDate.getTime() - a.printDate.getTime(),
         );
         setInvoices(sorted);
   
@@ -128,14 +129,14 @@ const TableInvoice = () => {
         
           </div>
               <div className="col-span-1 px-1"></div>
-                  <div className="col-span-3 px-2">
+                  {/* <div className="col-span-3 px-2">
                       <Link href="/invoices/add">
                           <button className="bg-green-600 text-white px-4 py-2 rounded">
                               Tạo hóa đơn
                           </button>
                       </Link>
                       <button className="bg-green-600 text-white px-4 py-2 rounded ml-2">In PDF</button>
-                  </div>
+                  </div> */}
         </div>
       </div>
 
@@ -247,12 +248,19 @@ const TableInvoice = () => {
                   <div className="col-span-8"></div>
                   <div className="col-span-4 px-2 font-bold flex justify-end">
                     {invoice.status === "Đã thanh toán" && (
-                      <button
+                      <><button
                         onClick={() => handleOpenInvoice(invoice)}
                         className="bg-green-600 text-white px-4 py-2 rounded mr-2 w-30"
                       >
                         Trả Hàng
                       </button>
+                      <button
+                        className="ml-2 rounded bg-green-600 px-4 py-2 text-white"
+                        onClick={() => handlePrintPDF(invoice, invoiceDetails)} // Gọi hàm in PDF
+                      >
+                          In PDF
+                        </button></>
+                      
                     )}
                   </div>
                 </div>

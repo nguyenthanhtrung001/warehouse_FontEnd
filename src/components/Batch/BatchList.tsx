@@ -42,18 +42,70 @@ export default function BatchList() {
   useEffect(() => {
     const fetchBatches = async () => {
       if (!employee) {
-       
         return;
       }
       setLoading(true);
       setError(null);
-      console.log("data:",employee.warehouseId);
+      console.log("data:", employee.warehouseId);
       try {
         const response = await axios.get(
-          `http://localhost:8888/v1/api/batches/in-warehouse/${employee.warehouseId}`
+          `http://localhost:8888/v1/api/batches/in-warehouse/${employee.warehouseId}`,
         );
 
         const fetchedBatches = response.data || []; // Đảm bảo mảng dữ liệu
+
+        // Lấy ngày hiện tại
+        const today = new Date();
+        const todayTimestamp = today.getTime(); // Đổi sang timestamp (dạng số)
+
+        fetchedBatches.forEach(
+          (batch: {
+            expiryDate: string | number | Date;
+            note: string;
+            statusColor: string;
+          }) => {
+            if (batch.expiryDate) {
+              const expiryDate = new Date(batch.expiryDate);
+              const expiryTimestamp = expiryDate.getTime(); // Chuyển đổi hạn sử dụng thành timestamp
+
+              // Kiểm tra xem hạn sử dụng sắp hết hay đã hết
+              if (expiryTimestamp <= todayTimestamp) {
+                batch.note = "Đã hết hạn"; // Nếu hết hạn
+                batch.statusColor = "red"; // Màu đỏ
+              } else if (
+                expiryTimestamp <=
+                todayTimestamp + 7 * 24 * 60 * 60 * 1000
+              ) {
+                // Cộng 7 ngày vào ngày hiện tại
+                batch.note = "Sắp hết hạn"; // Nếu sắp hết hạn (7 ngày)
+                batch.statusColor = "yellow"; // Màu vàng
+              }
+            } else {
+              batch.statusColor = "gray"; // Màu xám nếu expiryDate là null
+              batch.note = "Chưa xác định"; // Nếu không có hạn sử dụng
+            }
+          },
+        );
+
+        // Sắp xếp theo hạn sử dụng
+        fetchedBatches.sort(
+          (
+            a: { expiryDate: string | number | Date },
+            b: { expiryDate: string | number | Date },
+          ) => {
+            if (a.expiryDate && b.expiryDate) {
+              const expiryTimestampA = new Date(a.expiryDate).getTime();
+              const expiryTimestampB = new Date(b.expiryDate).getTime();
+              return expiryTimestampA - expiryTimestampB; // Lô có hạn sử dụng gần nhất lên đầu
+            } else if (a.expiryDate && !b.expiryDate) {
+              return -1; // Đưa lô có expiryDate lên trước
+            } else if (!a.expiryDate && b.expiryDate) {
+              return 1; // Đưa lô không có expiryDate xuống dưới
+            }
+            return 0;
+          },
+        );
+
         setBatches(fetchedBatches); // Gán dữ liệu lô hàng
         setFilteredBatches(fetchedBatches); // Gán dữ liệu ban đầu vào bộ lọc
         setTotalPages(Math.ceil(fetchedBatches.length / itemsPerPage)); // Tính tổng số trang
@@ -77,7 +129,7 @@ export default function BatchList() {
     // Tìm kiếm theo tên lô
     if (searchKeyword) {
       filtered = filtered.filter((batch) =>
-        batch.batchName.toLowerCase().includes(searchKeyword.toLowerCase())
+        batch.batchName.toLowerCase().includes(searchKeyword.toLowerCase()),
       );
     }
 
@@ -85,16 +137,14 @@ export default function BatchList() {
     const today = new Date();
     if (expiryFilter === "expired") {
       filtered = filtered.filter(
-        (batch) =>
-          batch.expiryDate && new Date(batch.expiryDate) < today // Kiểm tra null và so sánh
+        (batch) => batch.expiryDate && new Date(batch.expiryDate) < today, // Kiểm tra null và so sánh
       );
     } else if (expiryFilter === "notExpired") {
       filtered = filtered.filter(
-        (batch) =>
-          batch.expiryDate && new Date(batch.expiryDate) >= today // Kiểm tra null và so sánh
+        (batch) => batch.expiryDate && new Date(batch.expiryDate) >= today, // Kiểm tra null và so sánh
       );
     }
-    
+
     setFilteredBatches(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
     setCurrentPage(1); // Reset về trang đầu tiên khi tìm kiếm/lọc
@@ -103,11 +153,14 @@ export default function BatchList() {
   // Lấy dữ liệu phân trang
   const paginatedBatches = filteredBatches.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   // Xử lý khi thay đổi trang
-  const handlePageChange = (event: React.ChangeEvent<unknown>, page: number) => {
+  const handlePageChange = (
+    event: React.ChangeEvent<unknown>,
+    page: number,
+  ) => {
     setCurrentPage(page);
   };
 
@@ -179,10 +232,24 @@ export default function BatchList() {
               <TableBody>
                 {paginatedBatches.map((batch) => (
                   <TableRow key={batch.id}>
-                    <TableCell>L000{batch.id}</TableCell>
+                    <TableCell>{batch.id}</TableCell>
                     <TableCell>{batch.batchName}</TableCell>
                     <TableCell>{batch.expiryDate}</TableCell>
-                    <TableCell>{batch.note || "Không có ghi chú"}</TableCell>
+                    <TableCell
+                      style={{
+                        color:
+                          batch.statusColor === "red"
+                            ? "red"
+                            : batch.statusColor === "yellow"
+                              ? "yellow"
+                              : batch.statusColor === "gray"
+                                ? "gray"
+                                : "",
+                        fontWeight: "bold", // In đậm
+                      }}
+                    >
+                      {batch.note || "Không có ghi chú"}
+                    </TableCell>
                     <TableCell>
                       <Button
                         variant="contained"

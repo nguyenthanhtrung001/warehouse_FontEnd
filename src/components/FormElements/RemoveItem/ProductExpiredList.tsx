@@ -4,6 +4,8 @@ import axios from '@/utils/axiosInstance';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { Product } from '@/types/product'; // Sử dụng kiểu từ file chung
 import Image from 'next/image';
+import { useEmployeeStore } from '@/stores/employeeStore';
+
 
 interface ProductSuggestionListProps {
   onProductSelect: (product: Product) => void; // Sử dụng kiểu đúng
@@ -14,11 +16,19 @@ const ProductSuggestionList: React.FC<ProductSuggestionListProps> = ({ onProduct
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+    const { employee } = useEmployeeStore();
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get<Product[]>('http://localhost:8888/v1/api/products/expired');
+        if (!employee || !employee.warehouseId) return;
+        const warehouseId = employee?.warehouseId; // Ví dụ, thay thế bằng ID kho thực tế của bạn
+        const response = await axios.get<Product[]>('http://localhost:8888/v1/api/products/expired', {
+          params: {
+            warehouseId: warehouseId
+          }
+        });
+        
         setProducts(response.data);
         setLoading(false);
       } catch (error) {

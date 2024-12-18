@@ -1,6 +1,7 @@
 // src/types/index.ts
 
 export interface Batch {
+    statusColor: string;
     id: number;
     batchName: string;
     expiryDate: string | null;

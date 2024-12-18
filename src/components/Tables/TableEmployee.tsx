@@ -29,7 +29,7 @@ const TableEmployee = () => {
       console.error("Employee data is not available.");
       return;
     }
-  if (!employee.position.toLowerCase().includes("quản lý")) 
+  if (employee.position.toLowerCase().includes("admin")) 
     {
       employee.warehouseId = 0 ;
     }
@@ -58,8 +58,11 @@ const TableEmployee = () => {
         );
       }
   
-      console.log("Filtered data:", filteredEmployees);
-      setEmployees(filteredEmployees);
+      const sortedCustomers = filteredEmployees.sort(
+        (a: { id: number }, b: { id: number }) => b.id - a.id  // Sắp xếp giảm dần theo id
+      );
+      setEmployees(sortedCustomers);
+      console.log("nhan vien:", JSON.stringify(sortedCustomers, null,2));
     } catch (error) {
       console.error("Error fetching employees: ", error);
       setError("Có lỗi xảy ra khi lấy dữ liệu nhân viên.");
@@ -182,7 +185,7 @@ const TableEmployee = () => {
           </div>
           <div className="col-span-3 px-2 font-bold">
             <button
-              className="rounded bg-green-600 px-4 py-2 text-white"
+              className="rounded bg-green-600 px-4 py-2 text-white  flex justify-end"
               onClick={() => {
                 setShowAddEmployeeForm(true);
                 setIsUpdate(false);
@@ -190,9 +193,9 @@ const TableEmployee = () => {
             >
               Thêm mới
             </button>
-            <button className="ml-2 rounded bg-green-600 px-4 py-2 text-white">
+            {/* <button className="ml-2 rounded bg-green-600 px-4 py-2 text-white">
               In PDF
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

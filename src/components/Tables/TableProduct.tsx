@@ -44,6 +44,7 @@ const TableProduct = () => {
           batch: item.batchLocation.bath,
         }))
       );
+      productList.sort((a, b) => b.sold - a.sold);
       setProducts(productList);
     } catch (error) {
       console.error('Error fetching products: ', error);
@@ -165,12 +166,12 @@ const TableProduct = () => {
           <div className="col-span-1 px-1"></div>
           <div className="col-span-3 px-2 font-bold">
             <button
-              className="bg-green-600 text-white px-4 py-2 rounded"
+              className="bg-green-600 text-white px-4 py-2 rounded  flex justify-end"
               onClick={() => setShowAddProductForm(true)}
             >
               Thêm mới
             </button>
-            <button className="bg-green-600 text-white px-4 py-2 rounded ml-2">In PDF</button>
+            {/* <button className="bg-green-600 text-white px-4 py-2 rounded ml-2">In PDF</button> */}
           </div>
         </div>
       </div>

@@ -58,7 +58,7 @@ const AddCustomerForm: React.FC<AddCustomerFormProps> = ({
     const fetchProvinces = async () => {
       try {
         const response = await axios.get(
-          "https://vapi.vnappmob.com/api/province/",
+          "https://vapi.vnappmob.com/api/v2/province/",
         );
 
         setProvinces(response.data.results || []); // Lưu danh sách tỉnh
@@ -76,7 +76,7 @@ const AddCustomerForm: React.FC<AddCustomerFormProps> = ({
       console.log("data tinh: ", formData.province);
       axios
         .get(
-          `https://vapi.vnappmob.com/api/province/district/${formData.province.id}`,
+          `https://vapi.vnappmob.com/api/v2/province/district/${formData.province.id}`,
         )
         .then((response) => {
           setDistricts(response.data.results || []); // Cập nhật danh sách huyện
@@ -91,7 +91,7 @@ const AddCustomerForm: React.FC<AddCustomerFormProps> = ({
   useEffect(() => {
     if (formData.district.id) {
       axios
-        .get(`https://vapi.vnappmob.com/api/province/ward/${formData.district.id}`)
+        .get(`https://vapi.vnappmob.com/api/v2/province/ward/${formData.district.id}`)
         .then((response) => {
           setWards(response.data.results || []); // Cập nhật danh sách xã
         })
@@ -161,7 +161,28 @@ const AddCustomerForm: React.FC<AddCustomerFormProps> = ({
         Swal.fire("Thành công!", "Khách hàng đã được thêm.", "success");
       } catch (error) {
         console.error("Error submitting form: ", error);
-        Swal.fire("Thất bại!", "Đã xảy ra lỗi khi thêm khách hàng.", "error");
+  
+        // Kiểm tra xem lỗi có phải là AxiosError không
+        if (axios.isAxiosError(error)) {
+          // Kiểm tra lỗi từ response API
+          if (error.response) {
+            // Trường hợp có lỗi từ server trả về
+            if (error.response.data && error.response.data.message) {
+              Swal.fire("Lỗi", error.response.data.message, "error");
+            } else {
+              Swal.fire("Lỗi", "Đã xảy ra lỗi từ server.", "error");
+            }
+          } else if (error.request) {
+            // Trường hợp không có response (ví dụ: server không phản hồi)
+            Swal.fire("Lỗi", "Không nhận được phản hồi từ server.", "error");
+          } else {
+            // Trường hợp khác như lỗi khi cấu hình request
+            Swal.fire("Lỗi", "Đã xảy ra lỗi khi gửi yêu cầu.", "error");
+          }
+        } else {
+          // Trường hợp không phải lỗi của Axios (ví dụ lỗi khác ngoài HTTP)
+          Swal.fire("Lỗi", "Đã xảy ra lỗi không xác định.", "error");
+        }
       }
     }
   };

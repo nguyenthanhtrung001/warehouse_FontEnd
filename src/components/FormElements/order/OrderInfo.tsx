@@ -2,7 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import { Product } from '@/types/product';
 import CustomerSelectModal from './CustomerSelectModal';
+import FormAddCustomer from '@/components/FormElements/customer/AddCustomerForm';
 import { useEmployeeStore } from '@/stores/employeeStore';
+import Modal from '@/components/Modal/Modal';
+import CurrentTime from '@/utils/currentTime';
 
 interface OrderInfoProps {
   products: Product[];
@@ -22,15 +25,26 @@ const OrderInfo: React.FC<OrderInfoProps> = ({
   const [totalPrice, setTotalPrice] = useState(0);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const { employee } = useEmployeeStore();
+  const [showAddCustomerForm, setShowAddCustomerForm] = useState(false);
+  
 
   useEffect(() => {
     const total = products.reduce((acc, product) => acc + product.quantity * product.price, 0);
     setTotalPrice(total);
   }, [products]);
+  
 
   const formatCurrency = (amount: number) => 
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-
+  const handleCloseModal = () => {
+    setShowAddCustomerForm(false);
+  };
+  const handleAddCustomerSuccess = async (): Promise<void> => {
+    console.log("Customer added successfully");
+   
+    // Nếu bạn có tác vụ bất đồng bộ nào ở đây, bạn có thể thực hiện chúng
+    return Promise.resolve();  // Đảm bảo trả về một Promise
+  };
   return (
     <div className="p-4 bg-blue-50 border rounded-md text-sm text-black">
       <CustomerSelectModal
@@ -48,7 +62,7 @@ const OrderInfo: React.FC<OrderInfoProps> = ({
         ) : (
           <p>No employee data available</p>
         )}
-        <span>{new Date().toLocaleString()}</span>
+        <CurrentTime />
       </div>
 
       <div className="space-y-4 text-black">
@@ -59,10 +73,20 @@ const OrderInfo: React.FC<OrderInfoProps> = ({
 
         <div className="flex justify-between items-center">
           <label className="font-bold mt-2">Khách hàng:</label>
-          <button className="px-2 text-white bg-blue-500 rounded-md" onClick={() => setShowCustomerModal(true)}>
+          <button
+              className="bg-green-600 text-white px-4 py-2 rounded ml-4"
+              onClick={() => setShowAddCustomerForm(true)}
+            >
+              +
+            </button>
+          <button className="px-4 py-2 text-white bg-blue-500 rounded-md" onClick={() => setShowCustomerModal(true)}>
             Chọn khách hàng
           </button>
+
         </div>
+        <Modal isVisible={showAddCustomerForm} onClose={handleCloseModal} title="THÊM KHÁCH HÀNG">
+        <FormAddCustomer onClose={handleCloseModal} setCustomers={selectedCustomer} onSuccess={handleAddCustomerSuccess} />
+      </Modal>
 
         {selectedCustomer.current && selectedAddress.current && (
           <div className="p-2 border rounded-md bg-white mt-4">

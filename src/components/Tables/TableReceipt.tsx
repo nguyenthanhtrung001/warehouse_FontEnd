@@ -24,66 +24,69 @@ const TableReceipt = () => {
   const [paginatedReceipts, setPaginatedReceipts] = useState<Receipt[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const fetchReceipts = async () => {
+    if (!employee || !employee.warehouseId) return;
+    try {
+      const response = await axiosInstance.get(
+        API_ROUTES.RECEIPTS_WAREHOUSE(employee?.warehouseId),
+      );
+
+      const receiptList = await Promise.all(
+        response.data.map(async (item: any) => {
+          return {
+            id: item.id,
+            date: new Date(item.receiptDate),
+            supplier: item.supplier?.supplierName || "Chuyển kho",
+            warehouseTransfer: item.warehouseTransfer?.warehouseName || "",
+
+            price: item.purchasePrice,
+            employee: item.employeeId,
+            status:
+              item.status === 1
+                ? "Đã nhập"
+                : item.status === 2
+                  ? "Tồn tại trả hàng"
+                  : item.status === 3
+                    ? "Đã trả toàn bộ"
+                    : item.status === 0
+                      ? "Đã hủy"
+                      : "Không xác định",
+          };
+        }),
+      );
+
+      // Lọc dữ liệu theo từ khóa tìm kiếm (searchQuery)
+      const filteredReceipts = receiptList.filter(
+        (receipt) =>
+          receipt.supplier.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          receipt.id
+            .toString()
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          receipt.status.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
+
+      // Sắp xếp danh sách phiếu nhập theo thời gian (mới nhất lên đầu)
+      const sortedReceipts = filteredReceipts.sort((a, b) => b.date - a.date);
+
+      setReceipts(sortedReceipts);
+
+      // Tính toán phân trang
+      const total = Math.ceil(sortedReceipts.length / pageSize);
+      setTotalPages(total);
+
+      const startIndex = (currentPage - 1) * pageSize;
+      const paginatedData = sortedReceipts.slice(
+        startIndex,
+        startIndex + pageSize,
+      );
+      setPaginatedReceipts(paginatedData);
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu phiếu nhập: ", error);
+    }
+  };
   useEffect(() => {
-    const fetchReceipts = async () => {
-      if (!employee || !employee.warehouseId) return;
-      try {
-        const response = await axiosInstance.get(
-          API_ROUTES.RECEIPTS_WAREHOUSE(employee?.warehouseId),
-        );
-
-        const receiptList = await Promise.all(
-          response.data.map(async (item: any) => {
-            return {
-              id: item.id,
-              date: new Date(item.receiptDate),
-              supplier: item.supplier.supplierName,
-              price: item.purchasePrice,
-              employee: item.employeeId,
-              status:
-                item.status === 1
-                  ? "Đã nhập"
-                  : item.status === 2
-                    ? "Tồn tại trả hàng"
-                    : item.status === 3
-                      ? "Đã trả toàn bộ"
-                      : item.status === 0
-                        ? "Đã hủy"
-                        : "Không xác định",
-            };
-          }),
-        );
-
-        // Lọc dữ liệu theo từ khóa tìm kiếm (searchQuery)
-        const filteredReceipts = receiptList.filter(
-          (receipt) =>
-            receipt.supplier.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            receipt.id
-              .toString()
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase()) ||
-            receipt.status.toLowerCase().includes(searchTerm.toLowerCase()),
-        );
-
-        // Sắp xếp danh sách phiếu nhập theo thời gian (mới nhất lên đầu)
-        const sortedReceipts = filteredReceipts.sort((a, b) => b.date - a.date);
-
-        setReceipts(sortedReceipts);
-
-        // Tính toán phân trang
-        const total = Math.ceil(sortedReceipts.length / pageSize);
-        setTotalPages(total);
-
-        const startIndex = (currentPage - 1) * pageSize;
-        const paginatedData = sortedReceipts.slice(
-          startIndex,
-          startIndex + pageSize,
-        );
-        setPaginatedReceipts(paginatedData);
-      } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu phiếu nhập: ", error);
-      }
-    };
+    
 
     fetchReceipts();
   }, [employee, currentPage, pageSize, searchTerm]); // Thêm searchQuery vào dependency array
@@ -130,6 +133,8 @@ const TableReceipt = () => {
         setReceipts((prevReceipts) =>
           prevReceipts.filter((r) => r.id !== receiptId),
         );
+
+        fetchReceipts();
       }
     } catch (error) {
       console.error("Error canceling receipt: ", error);
@@ -152,6 +157,7 @@ const TableReceipt = () => {
       currency: "VND",
     }).format(amount);
   };
+  
 
   return (
     <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
@@ -175,9 +181,9 @@ const TableReceipt = () => {
                 Tạo phiếu nhập
               </button>
             </Link>
-            <button className="ml-2 rounded bg-green-600 px-4 py-2 text-white">
+            {/* <button className="ml-2 rounded bg-green-600 px-4 py-2 text-white">
               In PDF
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
@@ -211,12 +217,14 @@ const TableReceipt = () => {
               </div>
               <div className="col-span-2">
                 <p className="mt-2 text-sm text-black dark:text-white">
-                  {receipt.supplier}
+                  {receipt.supplier?.trim() && receipt.supplier !== "Chuyển kho"
+                    ? receipt.supplier
+                    : receipt.warehouseTransfer}
                 </p>
               </div>
               <div className="col-span-2">
                 <p className="mt-2 text-sm text-black dark:text-white">
-                  {receipt.price}VND
+                  {formatCurrency(receipt.price)} 
                 </p>
               </div>
               <div className="col-span-2">
@@ -249,7 +257,13 @@ const TableReceipt = () => {
                       </li>
                       <li className="border-gray-300 mb-2 border-b pb-2">
                         Nhà cung cấp:{" "}
-                        <span className="font-bold">{receipt.supplier}</span>
+                        <span className="font-bold">
+                          {" "}
+                          {receipt.supplier?.trim() &&
+                          receipt.supplier !== "Chuyển kho"
+                            ? receipt.supplier
+                            : receipt.warehouseTransfer}
+                        </span>
                       </li>
                     </ul>
                   </div>
@@ -303,9 +317,9 @@ const TableReceipt = () => {
                       </div>
                       <div className="col-span-2">{detail.nameProduct}</div>
                       <div className="col-span-2">{detail.quantity}</div>
-                      <div className="col-span-2">{detail.purchasePrice}</div>
+                      <div className="col-span-2">{formatCurrency(detail.purchasePrice)}</div>
                       <div className="col-span-2">
-                        {detail.purchasePrice * detail.quantity}
+                        {formatCurrency(detail.purchasePrice * detail.quantity)}
                       </div>
                     </div>
                   ))}
@@ -338,20 +352,21 @@ const TableReceipt = () => {
                 <div className="mt-3 grid grid-cols-12 py-6">
                   <div className="col-span-7"></div>
                   <div className="col-span-5 flex justify-end px-2">
-                    <button
+                    {/* <button
                       onClick={() => handleOpenReceipt(receipt)}
                       className="mr-2 rounded bg-green-600 px-4 py-2 text-white"
                     >
                       Mở phiếu
-                    </button>
-                    {receipt.status !== "Đã trả toàn bộ" && (
-                      <button
-                        className="mr-2 rounded bg-green-600 px-4 py-2 text-white"
-                        onClick={() => handleOpenReceipt(receipt)}
-                      >
-                        Trả nhập hàng
-                      </button>
-                    )}
+                    </button> */}
+                    {receipt.status !== "Đã trả toàn bộ" &&
+                      receipt.supplier !== "Chuyển kho" && (
+                        <button
+                          className="mr-2 rounded bg-green-600 px-4 py-2 text-white"
+                          onClick={() => handleOpenReceipt(receipt)}
+                        >
+                          Trả nhập hàng
+                        </button>
+                      )}
                     {receipt.status !== "Tồn tại trả hàng" &&
                       receipt.status !== "Đã trả toàn bộ" && (
                         <button

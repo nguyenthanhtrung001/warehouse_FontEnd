@@ -58,7 +58,7 @@ const RevenueBarChart = () => {
     labels: [] as string[],
     datasets: [
       {
-        label: 'Doanh thu theo chi nhánh',
+        label: 'Xuất kho theo chi nhánh',
         data: [] as number[],
         backgroundColor: ['#8884d8', '#82ca9d', '#ffc658', '#a4de6c', '#d0ed57', '#ffc658'],
       },
@@ -79,7 +79,7 @@ const RevenueBarChart = () => {
           labels: labels,
           datasets: [
             {
-              label: 'Doanh thu theo chi nhánh',
+              label: 'Xuất kho theo chi nhánh',
               data: data,
               backgroundColor: ['#8884d8', '#82ca9d', '#ffc658', '#a4de6c', '#d0ed57', '#ffc658'],
             },
@@ -94,7 +94,7 @@ const RevenueBarChart = () => {
   return (
     <Box sx={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', height: '350px' }}>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-        Doanh thu theo chi nhánh - {currentMonth} {currentYear}
+        Xuất hàng theo chi nhánh - {currentMonth} {currentYear}
       </Typography>
       <Bar data={barData} options={optionsCurrencyVND} height={250} />
     </Box>

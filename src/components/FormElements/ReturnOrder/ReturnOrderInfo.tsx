@@ -6,7 +6,7 @@ import Modal from '@/components/Modal/Modal';
 import FormAddCustomer from '@/components/FormElements/customer/AddCustomerForm';
 import axios from 'axios';
 import { useEmployeeStore, initializeEmployeeFromLocalStorage } from '@/stores/employeeStore';
-
+import CurrentTime from '@/utils/currentTime';
 
 interface OrderInfoProps {
   products: Product[];
@@ -69,14 +69,7 @@ const [showAddCustomerForm, setShowAddCustomerForm] = useState(false);
     setShowAddCustomerForm(false);
   };
 
-  const handleSuccess = async () => {
-    try {
-      const response = await axios.get('http://localhost:8087/api/customers');
-      setCustomers(response.data);
-    } catch (error) {
-      console.error("Error fetching updated customers: ", error);
-    }
-  };
+
   const handleCustomerChange = (selectedOption: any) => {
     setSelectedCustomer(selectedOption ? selectedOption.value : '');
   };
@@ -94,14 +87,13 @@ const [showAddCustomerForm, setShowAddCustomerForm] = useState(false);
   return (
    
     <div className="p-4 bg-blue-50 border rounded-md text-sm text-black">
-       <Modal isVisible={showAddCustomerForm} onClose={handleCloseModal} title="Thêm khách hàng">
-        <FormAddCustomer onClose={handleCloseModal} setCustomers={setCustomers} onSuccess={handleSuccess} />
-      </Modal>
+     
       <div className="flex justify-between mb-4">
         {employee ? (<span className="font-bold text-red">{employee.employeeName}</span>) : (
           <p>No employee data available</p>
-        )}
-        <span>{new Date().toLocaleString()}</span>
+        )} 
+        <CurrentTime />
+       
       </div>
       <div className="space-y-4 text-black">
         <div className="flex justify-between">
@@ -124,8 +116,8 @@ const [showAddCustomerForm, setShowAddCustomerForm] = useState(false);
             onChange={handlePaymentMethodChange}
             className="p-1 border border-gray-300 w-48 ml-2 text-center"
           >
-            <option value="cash">Tiền mặt</option>
-            <option value="transfer">Chuyển khoản</option>
+            <option value="cash" disabled>Tiền mặt</option>
+            {/* <option value="transfer">Chuyển khoản</option> */}
           </select>
         </div>
         <div className="flex justify-between">

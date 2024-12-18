@@ -45,7 +45,7 @@ const ProductDistributionPieChart = () => {
   return (
     <Box sx={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', height: '350px' }}>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-        Tỷ trọng sản phẩm bán ra
+        Tỷ trọng sản phẩm xuất kho
       </Typography>
       <Pie data={pieData} options={{ responsive: true, maintainAspectRatio: false }} height={250} />
     </Box>

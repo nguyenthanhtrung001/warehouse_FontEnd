@@ -57,10 +57,11 @@ const TableInvoice = () => {
           price: item.price,
           status: item.status === 1 ? "Đã thanh toán" : "Chưa thanh toán",
         }));
-      const sorted = invoiceList.sort(
-        (a: { date: number }, b: { date: number }) => b.date - a.date,
-      );
+        const sorted = invoiceList.sort(
+          (a: { printDate: Date }, b: { printDate: Date }) => b.printDate.getTime() - a.printDate.getTime(),
+        );
       setInvoices(sorted);
+      
 
       // Tính toán tổng số trang
       const total = Math.ceil(sorted.length / pageSize);
@@ -95,6 +96,7 @@ const TableInvoice = () => {
         );
         setInvoiceDetails(response.data);
         setSelectedInvoice(invoice);
+        console.log("Data:", JSON.stringify(response.data, null,2));
       }
     } catch (error) {
       console.error("Error fetching invoice details: ", error);
@@ -166,15 +168,15 @@ const TableInvoice = () => {
             />
           </div>
           <div className="col-span-1 px-1"></div>
-          <div className="col-span-3 px-2">
+          <div className="col-span-3 px-2 flex justify-end">
             <Link href="/order/add">
               <button className="rounded bg-green-600 px-4 py-2 text-white">
                 Đặt hàng
               </button>
             </Link>
-            <button className="ml-2 rounded bg-green-600 px-4 py-2 text-white">
+            {/* <button className="ml-2 rounded bg-green-600 px-4 py-2 text-white">
               In PDF
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

@@ -6,5 +6,6 @@ export type Receipt = {
     id: number;
     purchasePrice: number;
     employee:number;
+    warehouseTransfer: string;
   };
   

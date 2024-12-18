@@ -7,6 +7,7 @@ import FormUpdateSupplier from "@/components/FormElements/supplier/UpdateSupplie
 import API_ROUTES from "@/utils/apiRoutes"; // Import API routes từ cấu hình
 import axiosInstance from "@/utils/axiosInstance";
 import SearchInput from "../Search/SearchInputProps";
+import Swal from "sweetalert2";
 
 const TableSupplier = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -20,31 +21,34 @@ const TableSupplier = () => {
   // Trạng thái phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5); // Số lượng nhà cung cấp trên mỗi trang
+  const fetchSuppliers = async () => {
+    try {
+      const response = await axiosInstance.get(API_ROUTES.SUPPLIERS);
+      const allSuppliers = response.data;
+
+      // Lọc danh sách nhà cung cấp theo searchTerm
+      const filteredSuppliers = allSuppliers.filter(
+        (supplier: Supplier) =>
+          supplier.supplierName
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          supplier.phoneNumber
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          supplier.email.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
+
+      const sortedSuppliers = filteredSuppliers.sort(
+        (a: { id: number }, b: { id: number }) => b.id - a.id, // Sắp xếp giảm dần theo id
+      );
+
+      setSuppliers(sortedSuppliers);
+    } catch (error) {
+      console.error("Error fetching suppliers: ", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchSuppliers = async () => {
-      try {
-        const response = await axiosInstance.get(API_ROUTES.SUPPLIERS);
-        const allSuppliers = response.data;
-
-        // Lọc danh sách nhà cung cấp theo searchTerm
-        const filteredSuppliers = allSuppliers.filter(
-          (supplier: Supplier) =>
-            supplier.supplierName
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase()) ||
-            supplier.phoneNumber
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase()) ||
-            supplier.email.toLowerCase().includes(searchTerm.toLowerCase()),
-        );
-
-        setSuppliers(filteredSuppliers);
-      } catch (error) {
-        console.error("Error fetching suppliers: ", error);
-      }
-    };
-
     fetchSuppliers();
   }, [searchTerm]); // Cập nhật khi searchTerm thay đổi
 
@@ -79,6 +83,41 @@ const TableSupplier = () => {
     setSelectedSupplier(supplier);
     setShowUpdateSupplierForm(true);
   };
+  const handleDeleteSupplier = async (id: number) => {
+    const isConfirmed = await Swal.fire({
+      title: "Bạn có chắc chắn muốn xóa nhà cung cấp này?",
+      text: "Việc xóa sẽ không thể khôi phục lại!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Xóa",
+      cancelButtonText: "Hủy",
+    });
+
+    if (isConfirmed.isConfirmed) {
+      try {
+        // Gửi yêu cầu xóa nhà cung cấp
+        await axiosInstance.delete(`${API_ROUTES.SUPPLIERS}/${id}`);
+
+        // Thông báo thành công
+        Swal.fire({
+          title: "Thành công!",
+          text: "Nhà cung cấp đã được xóa thành công.",
+          icon: "success",
+        });
+
+        // Cập nhật lại danh sách sau khi xóa
+        setSuppliers(suppliers.filter((supplier) => supplier.id !== id));
+      } catch (error) {
+        console.error("Error deleting supplier: ", error);
+        // Thông báo lỗi
+        Swal.fire({
+          title: "Lỗi!",
+          text: "Đã xảy ra lỗi khi xóa nhà cung cấp.",
+          icon: "error",
+        });
+      }
+    }
+  };
 
   return (
     <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
@@ -104,9 +143,9 @@ const TableSupplier = () => {
             >
               Thêm mới
             </button>
-            <button className="ml-2 rounded bg-green-600 px-4 py-2 text-white">
+            {/* <button className="ml-2 rounded bg-green-600 px-4 py-2 text-white">
               In PDF
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
@@ -169,6 +208,12 @@ const TableSupplier = () => {
                   onClick={() => handleUpdateClick(supplier)}
                 >
                   Cập nhật
+                </button>
+                <button
+                  onClick={() => handleDeleteSupplier(supplier.id)}
+                  className="ml-2 rounded bg-red px-4 py-2 text-white"
+                >
+                  Xóa
                 </button>
               </div>
             </div>

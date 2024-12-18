@@ -185,7 +185,12 @@ const ChartProductSale12Month: React.FC = () => {
         console.log("API Response:", response.data);
 
         const chartData = response.data.chartData;
-        setSeries(chartData);
+        if (Array.isArray(chartData)) {
+          setSeries(chartData); // Cập nhật series nếu dữ liệu hợp lệ
+          
+        } else {
+          console.error("Invalid chart data format");
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       }

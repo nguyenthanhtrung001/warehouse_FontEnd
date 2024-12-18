@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Product } from '@/types/product';
 import { useEmployeeStore, initializeEmployeeFromLocalStorage } from '@/stores/employeeStore';
-
+import CurrentTime from '@/utils/currentTime';
 
 interface OrderInfoProps {
   products: Product[];
@@ -89,7 +89,7 @@ const OrderInfo: React.FC<OrderInfoProps> = ({
       {employee ? (<span className="font-bold text-red">{employee.employeeName}</span>) : (
           <p>No employee data available</p>
         )}
-        <span>{new Date().toLocaleString()}</span>
+        <CurrentTime />
       </div>
       <div className="space-y-4 ">
         <div className="flex justify-between">

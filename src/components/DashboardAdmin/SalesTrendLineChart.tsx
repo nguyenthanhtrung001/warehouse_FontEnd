@@ -51,7 +51,7 @@ const SalesTrendLineChart = () => {
     labels: [] as string[],
     datasets: [
       {
-        label: 'Xu hướng doanh số',
+        label: 'Xu hướng xuất kho',
         data: [] as number[],
         borderColor: '#82ca9d',
         borderWidth: 2,
@@ -76,7 +76,7 @@ const SalesTrendLineChart = () => {
           labels: labels,
           datasets: [
             {
-              label: 'Xu hướng doanh số',
+              label: 'Xu hướng xuất kho',
               data: revenueData,
               borderColor: '#82ca9d',
               borderWidth: 2,
@@ -95,7 +95,7 @@ const SalesTrendLineChart = () => {
   return (
     <Box sx={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', height: '350px' }}>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-        Xu hướng doanh số
+        Xu hướng xuất kho
       </Typography>
       <Line data={lineData} options={optionsCurrencyVND} height={250} />
     </Box>

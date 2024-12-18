@@ -1,20 +1,21 @@
-
-import { Metadata } from "next";
+import TableCustomer from "@/components/Batch/BatchList_Location";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import Chart  from "@/components/Charts/ChartProductSaleFor12Month";
+
+import { ToastContainer } from "react-toastify";
 
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "QUẢN LÝ KHO HÀNG",
   description: "Thành Trung",
 };
+
 const TablesPage = () => {
   return (
     <DefaultLayout>
       <div className="flex flex-col gap-12">
-          <h1 className=" text-black text-3xl font-bold text-center ">BIỂU ĐỒ THỂ HIỆN XU HƯỚNG XUẤT HÀNG TRONG NĂM</h1>
-        <Chart/>
-
+        {/* Bảng danh sách lô hàng */}
+        <TableCustomer />
+      
       </div>
     </DefaultLayout>
   );

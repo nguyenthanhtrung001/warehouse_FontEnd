@@ -39,14 +39,14 @@ export const handlePrintPDF = async (invoice: any, invoiceDetails: any[]) => {
 
   // Add header
   doc.setFontSize(20);
-  doc.text('PHIẾU ĐẶT HÀNG', 105, 20, { align: 'center' });
+  doc.text('HÓA ĐƠN MUA HÀNG', 105, 20, { align: 'center' });
 
   // Add sub-header with invoice info
   doc.setFontSize(12);
-  doc.text(`Mã Phiếu Đặt: DH000${invoice.id}`, 20, 30);
+  doc.text(`Mã Hóa Đơn: DH000${invoice.id}`, 20, 30);
   doc.text(`Ngày: ${format(new Date(invoice.printDate), 'dd/MM/yyyy - HH:mm:ss')}`, 20, 40);
   doc.text(`Khách Hàng: ${invoice.contactInfo}`, 20, 50);
-  doc.text(`Trạng Thái: Chờ thanh toán - chuyển hàng`, 20, 60);
+  doc.text(`Trạng Thái: ${invoice.status}`, 20, 60);
 
   // Add separator line
   doc.setLineWidth(0.5);
@@ -57,8 +57,8 @@ export const handlePrintPDF = async (invoice: any, invoiceDetails: any[]) => {
   doc.text('STT', 20, 70);
   doc.text('Tên Sản Phẩm', 30, 70);
   doc.text('Số Lượng', 100, 70);
-  doc.text('Chi tiết kho', 130, 70);
- 
+  doc.text('Đơn Giá', 130, 70);
+  doc.text('Thành Tiền', 160, 70);
 
   // Add table contents
   let yPosition = 80;
@@ -66,8 +66,8 @@ export const handlePrintPDF = async (invoice: any, invoiceDetails: any[]) => {
     doc.text(`${index + 1}`, 20, yPosition);
     doc.text(detail.nameProduct, 30, yPosition);
     doc.text(detail.quantity.toString(), 100, yPosition);
-    doc.text(detail.note_return, 130, yPosition);
-    
+    doc.text(detail.purchasePrice.toFixed(2), 130, yPosition);
+    doc.text((detail.quantity * detail.purchasePrice).toFixed(2), 160, yPosition);
     yPosition += 10;
   });
 

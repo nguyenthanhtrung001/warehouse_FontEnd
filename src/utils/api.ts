@@ -234,3 +234,31 @@ const handleApiError = (error: unknown, defaultMessage: string): void => {
   }
 };
 
+export const fetchWebInfo = async () => {
+  try {
+    // Sử dụng axios để gọi API
+    const response = await axiosInstance.get("http://localhost:8888/v1/identity/api/settings/web-info"); // URL của API thật
+    
+    // Kiểm tra phản hồi từ API
+    if (response.status === 200) {
+      // Axios tự động chuyển đổi dữ liệu JSON từ API response
+      const data = response.data;
+
+      // Kiểm tra dữ liệu trả về có đầy đủ không
+      if (!data || !data.name || !data.iconUrl) {
+        throw new Error("Dữ liệu website không hợp lệ");
+      }
+
+      return data; // Trả về dữ liệu { name: "Website Name", iconUrl: "URL của icon" }
+    } else {
+      throw new Error(`Lỗi từ API: ${response.statusText}`);
+    }
+  } catch (error) {
+    console.error("Lỗi khi lấy thông tin website:", error);
+
+    // Nếu có lỗi, trả về giá trị mặc định
+    return { name: "Website Name", iconUrl: "/images/logo/default-icon.png" };
+  }
+};
+
+

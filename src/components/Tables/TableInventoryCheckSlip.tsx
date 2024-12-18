@@ -127,11 +127,11 @@ const TableReceipt = () => {
             />
           </div>
           <div className="col-span-1"></div>
-          <div className="col-span-3 px-2 font-bold">
+          <div className="col-span-3 px-2 font-bold  flex justify-end">
           <Link href="/inventorycheckslip/add">
             <button className="bg-green-600 text-white px-4 py-2 rounded">Tạo phiếu kiểm</button>
           </Link>  
-            <button className="bg-green-600 text-white px-4 py-2 rounded ml-2">In PDF</button>
+            {/* <button className="bg-green-600 text-white px-4 py-2 rounded ml-2">In PDF</button> */}
           </div>
         </div>  </div>
 

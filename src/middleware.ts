@@ -31,6 +31,11 @@ const defaultMenuGroups = [
             route: "/warehouse/locations/search", // Đường dẫn bổ sung tính năng tìm kiếm vị trí
             access: "view_location_info" 
           },
+          { 
+            label: "Tra cứu nhanh", 
+            route: "/warehouse/search", // Đường dẫn bổ sung tính năng tìm kiếm vị trí
+            access: "view_search_info" 
+          },
         ],
       },
       {
@@ -50,8 +55,8 @@ const defaultMenuGroups = [
         children: [
           { label: "Nhập hàng", route: "/receipts", access: "receipts_view" },
           { label: "Trả hàng nhập", route: "/deliverynotes", access: "return_goods" },
-          { label: "Xuất hủy", route: "/remove-items", access: "dispose_items" },
-          { label: "Bán hàng", route: "/order", access: "order" },
+          { label: "Xuất hủy", route: "/remove-warehouse", access: "dispose_items" },
+          { label: "Xuất hàng bán", route: "/order", access: "order" },
           { label: "Hóa đơn", route: "/invoice", access: "invoice_view" },
           { label: "Trả hàng", route: "/order/return", access: "return_order" },
         ],
@@ -107,6 +112,14 @@ const defaultMenuGroups = [
         access: "suggestions",
         children: [
           { label: "Xu hướng SL nhập", route: "/predict", access: "predict_trends" },
+        ],
+      },
+      {
+        label: "Cài đặt",
+        route: "#",
+        access: "setting",
+        children: [
+          { label: "Cấu hình web", route: "/admin/settings", access: "settings" },
         ],
       },
     ],
@@ -229,13 +242,13 @@ function redirectToRoleHome(userRole: string, url: string) {
 
   switch (userRole) {
     case 'ADMIN':
-      redirectTo = '/dashboard-admin';
+      redirectTo = '/admin/dashboard-admin';
       break;
     case 'MANAGER':
       redirectTo = '/dashboard';
       break;
     case 'STAFF':
-      redirectTo = '/unauthorized';
+      redirectTo = '/';
       break;
     case 'USER':
       redirectTo = '/inventory';

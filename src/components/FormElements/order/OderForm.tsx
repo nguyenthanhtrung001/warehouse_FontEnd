@@ -13,6 +13,7 @@ import API_ROUTES from "@/utils/apiRoutes";
 import { useRouter } from 'next/navigation';
 import { encrypt } from "@/utils/cryptoUtils";
 import { useEmployeeStore } from '@/stores/employeeStore';
+import axios from "axios";
 
 const Home: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -79,12 +80,14 @@ const Home: React.FC = () => {
             note: note,
             warehouseId: employee?.warehouseId,
           };
-          console.log("data gửi đi: ",data);
+          console.log("data gửi đi: ",JSON.stringify(data, null,2));
 
           const response = await axiosInstance.post(API_ROUTES.INVOICES, data);
-
+          console.log("id order: ",response);
           if (response.status === 200 || response.status === 201) {
-            const orderId = response.data.id;
+           
+            const orderId = response.data.data.id;
+           
             const encryptedOrderId = encrypt(orderId.toString());
 
             Swal.fire({
@@ -103,14 +106,36 @@ const Home: React.FC = () => {
           } else {
             toast.error("Gửi đơn hàng thất bại");
           }
-        } catch (error) {
+        } catch (error: unknown) {
           console.error("Lỗi khi gửi đơn hàng:", error);
-          Swal.fire({
-            title: 'Thất bại!',
-            text: 'Lỗi khi gửi đơn hàng',
-            icon: 'error',
-            confirmButtonText: 'OK'
-          });
+  
+          if (axios.isAxiosError(error)) {
+            // Xử lý lỗi từ phản hồi API
+            if (error.response && error.response.data && error.response.data.data) {
+              const errorMessage = error.response.data.data; // Lấy thông báo lỗi từ API
+              Swal.fire({
+                title: 'Thất bại!',
+                text: errorMessage, // Hiển thị thông báo lỗi chi tiết từ API
+                icon: 'error',
+                confirmButtonText: 'OK'
+              });
+            } else {
+              Swal.fire({
+                title: 'Thất bại!',
+                text: 'Lỗi khi gửi đơn hàng. Vui lòng thử lại.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+              });
+            }
+          } else {
+            // Xử lý lỗi không phải từ Axios (ví dụ: lỗi kết nối mạng)
+            Swal.fire({
+              title: 'Thất bại!',
+              text: 'Có lỗi xảy ra khi gửi đơn hàng. Vui lòng kiểm tra kết nối mạng hoặc thử lại sau.',
+              icon: 'error',
+              confirmButtonText: 'OK'
+            });
+          }
         }
       }
     });

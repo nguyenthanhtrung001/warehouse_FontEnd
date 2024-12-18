@@ -44,6 +44,7 @@ const TableCancelItem = () => {
             };
           }),
         );
+        console.log("data:", JSON.stringify(cancelList, null, 2));
 
         // Lọc phiếu hủy theo mã phiếu (PHH000...)
         const filteredCancel = cancelList.filter(
@@ -173,14 +174,14 @@ const TableCancelItem = () => {
             />
           </div>
           <div className="col-span-3 flex justify-end  font-bold">
-            <Link href="/remove-Items/add">
-              <button className="rounded bg-green-600 px-4 py-2 text-white">
+            <Link href="/remove-warehouse/add">
+              <button className="rounded bg-green-600 px-4 py-2 text-white  flex justify-end">
                 Tạo phiếu hủy
               </button>
             </Link>
-            <button className="ml-2 rounded bg-green-600 px-4 py-2 text-white">
+            {/* <button className="ml-2 rounded bg-green-600 px-4 py-2 text-white">
               In PDF
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

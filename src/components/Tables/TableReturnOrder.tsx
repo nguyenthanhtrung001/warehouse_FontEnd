@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import Swal from "sweetalert2";
 import { useEmployeeStore } from "@/stores/employeeStore";
 import { handlePrintPDF } from "../PDF/return_order_PDF";
+import { Console } from "console";
 
 const TableReturnOrder = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -56,9 +57,10 @@ const TableReturnOrder = () => {
           employee: item.employeeId,
           status: item.status === 3 ? "Đã trả":"fixxxxx",
         }));
-      const sorted = invoiceList.sort(
-        (a: { date: number }, b: { date: number }) => b.date - a.date,
-      );
+        const sorted = invoiceList.sort(
+          (a: { id: number }, b: { id: number }) => b.id - a.id
+        );
+        
       setInvoices(sorted);
 
       // Tính toán tổng số trang
@@ -113,6 +115,7 @@ const TableReturnOrder = () => {
         cancelButtonText: "Quay lại",
       });
 
+      console.log("gia tr gui di: ",invoiceId)
       if (result.isConfirmed) {
         await axiosInstance.delete(
           API_ROUTES.DELETE_RETURN_DETAILS_BY_INVOICE_ID(invoiceId),
@@ -162,16 +165,16 @@ const TableReturnOrder = () => {
               placeholder="Nhập mã hóa đơn hoặc tên khách hàng"
             />
           </div>
-          <div className="col-span-3 px-1"></div>
+        
           <div className="col-span-3 flex justify-end px-2">
             <Link href="/invoice/return">
-              <button className="rounded bg-green-600 px-4 py-2 text-white">
+              <button className="rounded bg-green-600 px-4 py-2 text-white  flex justify-end">
                 Trả hàng (KH)
               </button>
             </Link>
-            <button className="ml-2 rounded bg-green-600 px-4 py-2 text-white">
+            {/* <button className="ml-2 rounded bg-green-600 px-4 py-2 text-white">
               In PDF
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
@@ -340,16 +343,16 @@ const TableReturnOrder = () => {
                 <div className="mt-3 grid grid-cols-12 py-6">
                   <div className="col-span-8"></div>
                   <div className="col-span-4 flex justify-end px-2 font-bold">
-                    {returnNote.status === "Tồn tại trả" && (
+                   
                       <button
-                        onClick={() => handleCancel(returnNote.id)}
+                        onClick={() => handleCancel(returnNote.invoice.id)}
                         className="mr-2 w-30 rounded bg-red px-4 py-2 text-white"
                       >
                         Hủy trả
                       </button>
                       
                       
-                    )}
+                  
                       <button
                       className="ml-2 rounded bg-green-600 px-4 py-2 text-white"
                       onClick={() => handlePrintPDF(returnNote, invoiceDetails)} // Gọi hàm in PDF

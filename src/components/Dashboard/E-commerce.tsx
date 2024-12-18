@@ -84,7 +84,7 @@ const ECommerce: React.FC = () => {
   return (
     <>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
-      <CardDataStats title="Danh thu" total={revenue !== null ? formatCurrencyVND(revenue) : 'Đang tải...'} >
+      <CardDataStats title="Xuất hàng" total={revenue !== null ? formatCurrencyVND(revenue) : 'Đang tải...'} >
       <svg
             className="fill-primary dark:fill-white"
             width="22"

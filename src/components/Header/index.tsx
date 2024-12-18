@@ -4,16 +4,21 @@ import DropdownNotification from "./DropdownNotification";
 import DropdownUser from "./DropdownUser";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useEmployeeStore } from "@/stores/employeeStore";
 
 const Header = (props: {
   sidebarOpen: string | boolean | undefined;
   setSidebarOpen: (arg0: boolean) => void;
 }) => {
   const [warehouses, setWarehouses] = useState([2]);
-  const [selectedWarehouse, setSelectedWarehouse] = useState<string | number>("");
+  const [selectedWarehouse, setSelectedWarehouse] = useState<string | number>(
+    "",
+  );
+  const { employee } = useEmployeeStore();
 
   // Gọi API để lấy danh sách kho
   useEffect(() => {
+    if (!employee) return;
     const fetchWarehouses = async () => {
       try {
         const response = await fetch("http://localhost:8888/v1/api/warehouses");
@@ -21,7 +26,8 @@ const Header = (props: {
         setWarehouses(data);
         // Thiết lập giá trị mặc định là kho đầu tiên trong danh sách
         if (data.length > 0) {
-          setSelectedWarehouse(data[0].id);
+          setSelectedWarehouse(employee.warehouseId);
+          
         }
       } catch (error) {
         console.error("Failed to fetch warehouses", error);
@@ -29,7 +35,7 @@ const Header = (props: {
     };
 
     fetchWarehouses();
-  }, []);
+  }, [employee]);
 
   // Xử lý khi thay đổi lựa chọn kho
   const handleWarehouseChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -72,12 +78,14 @@ const Header = (props: {
               <span className="absolute right-0 h-full w-full rotate-45">
                 <span
                   className={`absolute left-2.5 top-0 block h-full w-0.5 rounded-sm bg-black delay-300 duration-200 ease-in-out dark:bg-white ${
-                    !props.sidebarOpen && "!h-0 !delay-[0]"}
+                    !props.sidebarOpen && "!h-0 !delay-[0]"
+                  }
                 `}
                 ></span>
                 <span
                   className={`delay-400 absolute left-0 top-2.5 block h-0.5 w-full rounded-sm bg-black duration-200 ease-in-out dark:bg-white ${
-                    !props.sidebarOpen && "!h-0 !delay-200"}
+                    !props.sidebarOpen && "!h-0 !delay-200"
+                  }
                 `}
                 ></span>
               </span>
@@ -96,21 +104,30 @@ const Header = (props: {
 
         <div className="hidden sm:block">
           <form action="#" method="POST">
-            <div className="relative">
-              <select
-                value={selectedWarehouse}
-                onChange={handleWarehouseChange}
-                className="px-4 py-2 border rounded-md"
-              >
-                <option value="" disabled>
-                  Chọn kho
-                </option>
-                {warehouses.map((warehouse: any) => (
-                  <option key={warehouse.id} value={warehouse.id}>
-                    {warehouse.warehouseName}
+            <div className="relative font-bold text-black">
+              {employee?.position !== "admin" && (
+                <select
+                  value={selectedWarehouse || ""}
+                  onChange={handleWarehouseChange}
+                  className="rounded-md border px-4 py-2"
+                  disabled
+                >
+                  <option value="" disabled>
+                    Chủ kho
                   </option>
-                ))}
-              </select>
+                  {Array.isArray(warehouses) && warehouses.length > 0 ? (
+                    warehouses.map((warehouse: any) => (
+                      <option key={warehouse.id} value={warehouse.id}>
+                        {warehouse.warehouseName} - MK000{warehouse.id}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>
+                      Không có kho nào
+                    </option>
+                  )}
+                </select>
+              )}
             </div>
           </form>
         </div>

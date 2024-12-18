@@ -51,7 +51,7 @@ const ContactInfoForm: React.FC<ContactInfoFormProps> = ({
   useEffect(() => {
     const fetchProvinces = async () => {
       try {
-        const response = await axios.get("https://vapi.vnappmob.com/api/province/");
+        const response = await axios.get("https://vapi.vnappmob.com/api/v2/province/");
         setProvinces(response.data.results || []);
       } catch (error) {
         console.error("Error fetching provinces:", error);
@@ -64,7 +64,7 @@ const ContactInfoForm: React.FC<ContactInfoFormProps> = ({
   useEffect(() => {
     if (selectedProvince) {
       axios
-        .get(`https://vapi.vnappmob.com/api/province/district/${selectedProvince}`)
+        .get(`https://vapi.vnappmob.com/api/v2/province/district/${selectedProvince}`)
         .then((response) => {
           setDistricts(response.data.results || []);
         })
@@ -78,7 +78,7 @@ const ContactInfoForm: React.FC<ContactInfoFormProps> = ({
   useEffect(() => {
     if (selectedDistrict) {
       axios
-        .get(`https://vapi.vnappmob.com/api/province/ward/${selectedDistrict}`)
+        .get(`https://vapi.vnappmob.com/api/v2/province/ward/${selectedDistrict}`)
         .then((response) => {
           setWards(response.data.results || []);
         })

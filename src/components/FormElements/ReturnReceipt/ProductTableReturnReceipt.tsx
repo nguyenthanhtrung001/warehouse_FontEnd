@@ -59,7 +59,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
               <td className="px-4 py-2 border text-center">{index + 1}</td>
               <td className="px-4 py-2 border text-center">
               <Image
-                    src={product.image || '/images/product/product-01.png'}
+                    src={product.image || '/images/logo/dog-logo.png'}
                     alt={product.productName}
                     width={48} // Adjust width as needed
                     height={48} // Adjust height as needed
