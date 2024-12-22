@@ -29,12 +29,14 @@ const PriceHistory = () => {
       try {
         const response = await axiosInstance.get("http://localhost:8888/v1/api/prices");
         const data = response.data.map((item: any) => ({
+          id: item.id,
           effectiveDate: item.effectiveDate,
           productName: item.product.productName,
           employeeId: item.employeeId,
           newPrice: item.price,
         }));
-        setHistory(data);
+        data.sort((a: { id: number; }, b: { id: number; }) => b.id - a.id);
+          setHistory(data);
         setFilteredHistory(data);
       } catch (error) {
         console.error("Error fetching price history: ", error);

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import BatchDetailModal from "./BatchDetailModal";
 import { Batch } from "@/types/batch";
+import { Modal } from "@mui/material";
+
 import {
   Box,
   Button,
@@ -21,6 +23,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import { useEmployeeStore } from "@/stores/employeeStore";
+import Swal from "sweetalert2";
 
 export default function BatchList() {
   const [batches, setBatches] = useState<Batch[]>([]); // Dữ liệu các lô hàng
@@ -37,6 +40,78 @@ export default function BatchList() {
 
   const itemsPerPage = 5; // Số lô hàng trên mỗi trang
   const { employee } = useEmployeeStore();
+  // cập nhật hạng sử dụng
+  const [isUpdateExpiryModalOpen, setIsUpdateExpiryModalOpen] = useState(false);
+  const [selectedBatchForUpdate, setSelectedBatchForUpdate] =
+    useState<Batch | null>(null);
+  const [newExpiryDate, setNewExpiryDate] = useState<string>("");
+
+  // Hàm mở modal cập nhật hạn sử dụng
+  const openUpdateExpiryDateModal = (batch: Batch) => {
+    setSelectedBatchForUpdate(batch);
+    setNewExpiryDate(batch.expiryDate || ""); // Gán hạn sử dụng hiện tại vào form
+    setIsUpdateExpiryModalOpen(true);
+  };
+
+  // Hàm đóng modal cập nhật hạn sử dụng
+  const closeUpdateExpiryDateModal = () => {
+    setIsUpdateExpiryModalOpen(false);
+    setSelectedBatchForUpdate(null);
+    setNewExpiryDate("");
+  };
+  const handleUpdateExpiryDate = async () => {
+    if (!selectedBatchForUpdate || !newExpiryDate) {
+      return;
+    }
+
+    try {
+      // Gửi yêu cầu cập nhật đến API
+      await axios.put(
+        `http://localhost:8888/v1/api/batches/${selectedBatchForUpdate.id}1111`,
+        { expiryDate: newExpiryDate },
+      );
+
+      // Đóng modal trước khi hiển thị Swal
+      setIsUpdateExpiryModalOpen(false);
+
+      // Chờ một chút để đảm bảo modal đã đóng hoàn toàn
+      await new Promise((resolve) => setTimeout(resolve, 300)); // Thời gian chờ 300ms
+
+      // Hiển thị thông báo thành công
+      await Swal.fire({
+        title: "Thành công!",
+        text: "Hạn sử dụng đã được cập nhật.",
+        icon: "success",
+        confirmButtonText: "OK",
+      });
+
+      // Cập nhật lại danh sách lô hàng
+      const updatedBatches = batches.map((batch) =>
+        batch.id === selectedBatchForUpdate.id
+          ? { ...batch, expiryDate: newExpiryDate }
+          : batch,
+      );
+
+      setBatches(updatedBatches);
+      setFilteredBatches(updatedBatches);
+    } catch (error) {
+      console.error("Lỗi khi cập nhật hạn sử dụng:", error);
+
+      // Đóng modal trước khi hiển thị Swal
+      setIsUpdateExpiryModalOpen(false);
+
+      // Chờ một chút để đảm bảo modal đã đóng hoàn toàn
+      await new Promise((resolve) => setTimeout(resolve, 300)); // Thời gian chờ 300ms
+
+      // Hiển thị thông báo lỗi
+      await Swal.fire({
+        title: "Lỗi!",
+        text: "Không thể cập nhật hạn sử dụng. Vui lòng thử lại.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
+  };
 
   // Lấy dữ liệu từ API
   useEffect(() => {
@@ -258,6 +333,14 @@ export default function BatchList() {
                       >
                         Xem chi tiết
                       </Button>
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        onClick={() => openUpdateExpiryDateModal(batch)}
+                        sx={{ marginLeft: 1 }}
+                      >
+                        Cập nhật hạn sử dụng
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -277,6 +360,57 @@ export default function BatchList() {
       )}
       {isModalOpen && selectedBatch && (
         <BatchDetailModal batchId={selectedBatch.id} onClose={closeModal} />
+      )}
+      {/* Modal cập nhật hạn sử dụng */}
+      {isUpdateExpiryModalOpen && selectedBatchForUpdate && (
+        <Modal
+          open={isUpdateExpiryModalOpen}
+          onClose={closeUpdateExpiryDateModal}
+          disablePortal
+          aria-labelledby="update-expiry-modal-title"
+          aria-describedby="update-expiry-modal-description"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Box
+            sx={{
+              position: "relative",
+              width: 400,
+              bgcolor: "background.paper",
+              border: "2px solid #000",
+              boxShadow: 24,
+              p: 4, // Padding
+              borderRadius: 2, // Bo tròn góc
+            }}
+          >
+            <Typography
+              id="update-expiry-modal-title"
+              variant="h6"
+              marginBottom={2}
+            >
+              Cập nhật hạn sử dụng cho lô: {selectedBatchForUpdate.batchName}
+            </Typography>
+            <TextField
+              label="Hạn sử dụng mới"
+              type="date"
+              value={newExpiryDate}
+              onChange={(e) => setNewExpiryDate(e.target.value)}
+              fullWidth
+              sx={{ marginBottom: 3 }}
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleUpdateExpiryDate}
+              fullWidth
+            >
+              Cập nhật
+            </Button>
+          </Box>
+        </Modal>
       )}
     </Box>
   );

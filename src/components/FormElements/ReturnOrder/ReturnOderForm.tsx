@@ -47,9 +47,9 @@ const Home: React.FC = () => {
     fetchInvoices();
   }, [refreshInvoices,employee]); // Add refreshInvoices as a dependency
 
-  const fetchReceiptById = async (invoiceId: string) => {
+  const fetchInvoicesById = async (invoiceId: string) => {
     try {
-      const response = await axios.get(`${API_ROUTES.INVOICE_DETAILS}/${invoiceId}`);
+      const response = await axios.get(`http://localhost:8888/v1/api/invoice-details/invoice-not-decode/${invoiceId}`);
       const data = response.data;
       console.log('Fetched Data:', JSON.stringify(data, null, 2)); // Xuất dữ liệu dưới dạng JSON
 
@@ -89,7 +89,7 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     if (id) {
-      fetchReceiptById(id);
+      fetchInvoicesById(id);
     }
   }, [id]);
 
@@ -97,7 +97,7 @@ const Home: React.FC = () => {
     if (selectedOption) {
       const selectedInvoice = selectedOption.value;
       setProducts([]); // Xóa toàn bộ bảng
-      fetchReceiptById(selectedInvoice.id.toString()); // Lấy chi tiết hóa đơn mới
+      fetchInvoicesById(selectedInvoice.id.toString()); // Lấy chi tiết hóa đơn mới
     }
   };
 
@@ -177,9 +177,16 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="flex w-full h-screen p-4 text-xs text-black">
+    <div className="flex w-full h-screen p-2 text-xs text-black">
       <ToastContainer />
-      <div className="flex-2 w-2/3 p-4">
+      <div className="flex-2 w-2/3 p-2">
+        {/* Nút Quay Lại */}
+        <button
+          className="text-sm bg-gray-300 hover:bg-gray-400 focus:ring-gray-500 mb-5 rounded-md px-4 py-1 text-black shadow-lg focus:outline-none focus:ring-2"
+          onClick={() => window.history.back()}
+        >
+          ← Quay lại
+        </button>
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold text-black">TRẢ HÀNG</h1>
           <div className="flex items-center space-x-2">

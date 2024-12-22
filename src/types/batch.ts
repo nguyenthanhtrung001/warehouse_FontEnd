@@ -23,7 +23,7 @@ export interface Batch {
     id: number;
     warehouseLocation: string;
     warehouseId: number;
-    status: number | null;
+    status: string | null;
     capacity: number | null;
     currentLoad: number | null;
   }

@@ -57,7 +57,7 @@ const ProductQuantityPieChart: React.FC<ProductQuantityPieChartProps> = ({ month
     },
     labels: data.map(item => `MH000${item.productId}`),
     title: {
-      text: `Thống kê sản phẩm xuất kho tháng ${month} năm ${year} ${employee?.warehouseId}`,
+      text: `Thống kê sản phẩm xuất kho tháng ${month} năm ${year}`,
       align: 'left'
       
     },

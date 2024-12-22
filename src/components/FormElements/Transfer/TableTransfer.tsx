@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { useEmployeeStore } from '@/stores/employeeStore';
 
+
 // Định nghĩa kiểu cho đơn chuyển kho
 interface TransferOrder {
   id: number;
@@ -17,6 +18,7 @@ interface TransferOrder {
     warehouseName: string;
     id: number;
   };
+
   warehouseDestination: {
     warehouseName: string;
     id: number;
@@ -27,9 +29,12 @@ interface TransferOrder {
 interface ProductDetail {
   id: number;
   nameProduct: string;
+  batchDetail_Id: number;
   quantity: number;
   bath: {
     batchName: string;
+    expiryDate: string;
+
   };
 }
 
@@ -95,6 +100,7 @@ const OrderApprovalPage = () => {
     try {
       const response = await axios.get(`http://localhost:8888/v1/api/deliveryNotes/${orderId}/details`);
       setProductDetails(response.data);
+      console.log("data:1111", JSON.stringify(response.data, null, 2))
     } catch (error) {
       console.error("Error fetching order details:", error);
       Swal.fire("Error", "Có lỗi xảy ra khi lấy chi tiết sản phẩm.", "error");
@@ -118,6 +124,44 @@ const OrderApprovalPage = () => {
     const date = new Date(dateString);
     return format(date, 'dd/MM/yyyy', { locale: vi });
   };
+  const updateDeliveryNoteStatus = async (id: number) => {
+    // Hiển thị hộp thoại xác nhận
+    const result = await Swal.fire({
+      title: "Xác nhận hoàn tất",
+      text: "Bạn có chắc chắn muốn hoàn tất phiếu này?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Hoàn tất",
+      cancelButtonText: "Hủy",
+    });
+  
+    // Nếu người dùng xác nhận, tiếp tục thực hiện API
+    if (result.isConfirmed) {
+      try {
+        const response = await axios.patch(
+          `http://localhost:8888/v1/api/deliveryNotes/complete-transfer/${id}`
+        );
+  
+        if (response.status === 204 || response.status === 200) {
+          Swal.fire("Thành công", "Cập nhật trạng thái phiếu thành công.", "success");
+  
+          // Làm mới danh sách đơn hàng (nếu cần)
+          fetchOrders();
+        } else {
+          Swal.fire("Lỗi", "Không thể cập nhật trạng thái phiếu. Vui lòng thử lại.", "error");
+        }
+      } catch (error) {
+        console.error("Error updating delivery note status:", error);
+        Swal.fire("Lỗi", "Đã xảy ra lỗi khi cập nhật trạng thái phiếu.", "error");
+      }
+    } else {
+      Swal.fire("Đã hủy", "Bạn đã hủy cập nhật trạng thái phiếu.", "info");
+    }
+  };
+  
+  
 
   return (
     <div className="w-full mx-auto p-8 bg-white shadow-lg rounded-lg text-black">
@@ -142,6 +186,25 @@ const OrderApprovalPage = () => {
         >
           Chờ Xác Nhận
         </button>
+       
+        <button
+          className={`px-4 py-2 font-semibold rounded-lg ${activeTab === 2 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-700'}`}
+          onClick={() => {
+            setActiveTab(2);
+            setCurrentPage(1);
+          }}
+        >
+          Đã xác nhận
+        </button>
+        <button
+          className={`px-4 py-2 font-semibold rounded-lg ${activeTab === 3 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-700'}`}
+          onClick={() => {
+            setActiveTab(3);
+            setCurrentPage(1);
+          }}
+        >
+          Hoàn tất
+        </button>
         <button
           className={`px-4 py-2 font-semibold rounded-lg ${activeTab === 0 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-700'}`}
           onClick={() => {
@@ -165,7 +228,7 @@ const OrderApprovalPage = () => {
                 <th className="py-3 px-4 text-center text-blue-700 font-semibold">Ngày Chuyển</th>
                 <th className="py-3 px-4 text-left text-blue-700 font-semibold">Trạng thái</th>
                 <th className="py-3 px-4 text-center text-blue-700 font-semibold">
-                  {activeTab === 1 ? "Tác Vụ" : "Lý Do Từ Chối"}
+                  {activeTab === 1||activeTab === 2 ||activeTab === 3 ? "Tác Vụ" : "Lý Do Từ Chối"}
                 </th>
               </tr>
             </thead>
@@ -199,7 +262,35 @@ const OrderApprovalPage = () => {
                           Chi Tiết
                         </button>
                       </>
-                    ) : (
+                    ): activeTab === 2 ? (
+                      <>
+                        <button
+                          onClick={() => {
+                            // Cập nhật trạng thái phiếu với ID và trạng thái mới (ví dụ: 2 là trạng thái hoàn tất)
+                            updateDeliveryNoteStatus(order.id);
+                          }}
+                          className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 transition"
+                        >
+                          Hoàn tất
+                        </button>
+                        <button
+                          onClick={() => handleOrderClick(order)}
+                          className="bg-blue-500 text-white px-3 py-1 rounded-md ml-2 hover:bg-blue-600 transition"
+                        >
+                          Chi Tiết
+                        </button>
+                      </>
+                    ) : activeTab === 3 ? (
+                      <>
+                        
+                        <button
+                          onClick={() => handleOrderClick(order)}
+                          className="bg-blue-500 text-white px-3 py-1 rounded-md ml-2 hover:bg-blue-600 transition"
+                        >
+                          Chi Tiết
+                        </button>
+                      </>
+                    ) :(
                       <>
                         <span className="text-red">{order.reason || "Không có lý do"}</span>
                         <button
@@ -249,6 +340,7 @@ const OrderApprovalPage = () => {
             <table className="min-w-full bg-blue-50 rounded-lg overflow-hidden shadow-sm">
               <thead className="bg-blue-200">
                 <tr>
+                <th className="py-3 px-4 text-left text-blue-700 font-semibold">ID kho</th>
                   <th className="py-3 px-4 text-left text-blue-700 font-semibold">Tên Sản Phẩm</th>
                   <th className="py-3 px-4 text-center text-blue-700 font-semibold">Số Lượng</th>
                   <th className="py-3 px-4 text-center text-blue-700 font-semibold">Lô Hàng</th>
@@ -257,9 +349,12 @@ const OrderApprovalPage = () => {
               <tbody>
                 {productDetails.map((detail) => (
                   <tr key={detail.id} className="border-b hover:bg-blue-100 transition-colors">
+                     <td className="py-2 px-4">MKH000{detail.batchDetail_Id}</td>
                     <td className="py-2 px-4">{detail.nameProduct}</td>
                     <td className="py-2 px-4 text-center">{detail.quantity}</td>
                     <td className="py-2 px-4 text-center">{detail.bath.batchName}</td>
+{/*                     
+                    <td className="py-2 px-4 text-center">{formatDate(detail.bath.expiryDate)}</td> */}
                   </tr>
                 ))}
               </tbody>

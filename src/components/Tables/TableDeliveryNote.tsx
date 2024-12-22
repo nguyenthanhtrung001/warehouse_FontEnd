@@ -278,7 +278,7 @@ const TableDeliveryNote = () => {
                       key={detail.productId}
                     >
                       <div className="col-span-4 px-6 font-bold text-blue-700">
-                        MH000{detail.productId}
+                        MKH000{detail.batchDetail_Id}
                       </div>
                       <div className="col-span-2">{detail.nameProduct}</div>
                       <div className="col-span-2">{detail.quantity}</div>

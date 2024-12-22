@@ -4,6 +4,7 @@ import axiosInstance from "@/utils/axiosInstance";
 import API_ROUTES from "@/utils/apiRoutes";
 import Swal from "sweetalert2";
 import { storage, ref, uploadBytes, getDownloadURL } from "@/utils/firebase"; // Import các hàm từ firebase
+import { useEmployeeStore } from "@/stores/employeeStore";
 
 interface Item {
   barcode: string;
@@ -39,6 +40,7 @@ export default function AddItemForm() {
   const [brands, setBrands] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [file, setFile] = useState<File | null>(null); // State để lưu trữ file ảnh
+  const { employee } = useEmployeeStore();
 
   useEffect(() => {
     const fetchBrands = async () => {
@@ -147,6 +149,7 @@ export default function AddItemForm() {
         brand: item.brand,
         images: imageURL,
         prices: item.salePrice,
+        employeeId: employee?.id,
       });
       try {
         const response = await axiosInstance.post(API_ROUTES.API_PRODUCTS, {
@@ -157,6 +160,7 @@ export default function AddItemForm() {
           brand: item.brand,
           images: imageURL,
           prices: item.salePrice,
+          employeeId: employee?.id,
         });
   
        

@@ -55,7 +55,7 @@ const TableReturnOrder = () => {
           // note: item.customer.note,
           price: item.price,
           employee: item.employeeId,
-          status: item.status === 3 ? "Đã trả":"fixxxxx",
+          status: item.status === 1 ? "Đã trả":"fixxxxx",
         }));
         const sorted = invoiceList.sort(
           (a: { id: number }, b: { id: number }) => b.id - a.id

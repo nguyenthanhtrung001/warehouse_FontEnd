@@ -7,10 +7,13 @@ import API_ROUTES from "@/utils/apiRoutes"; // Import API_ROUTES
 import Modal from "@/components/Modal/Modal";
 import LocationModal from "@/components/locations/LocationModal";
 import FormAddSupplier from "@/components/FormElements/supplier/AddSupplierForm";
-import { useEmployeeStore,  initializeEmployeeFromLocalStorage,} from "@/stores/employeeStore";
+import {
+  useEmployeeStore,
+  initializeEmployeeFromLocalStorage,
+} from "@/stores/employeeStore";
 import { Location } from "@/types/Location";
 import { toast } from "react-toastify";
-import CurrentTime from '@/utils/currentTime';
+import CurrentTime from "@/utils/currentTime";
 import Swal from "sweetalert2";
 
 interface OrderInfoProps {
@@ -81,81 +84,88 @@ const OrderInfo: React.FC<OrderInfoProps> = ({
     setGlobalValue(totalQuantity);
     setTotalPrice(total);
     setAmountDue(total); // Bạn có thể điều chỉnh tính toán cần trả nhà cung cấp dựa vào logic của bạn
-  }, [products,globalValue]);
+  }, [products, globalValue]);
 
   const fetchSuppliers = useCallback(async () => {
     try {
       const response = await axios.get<Supplier[]>(API_ROUTES.SUPPLIERS);
       console.log("Fetched suppliers:", response.data);
       setSuppliers(response.data);
-     
     } catch (error) {
       console.error("Error fetching suppliers:", error);
     }
   }, []);
-  
 
   // Mở modal để thêm vị trí mới
   const handleAdd = async () => {
     setSelectedLocation(undefined);
     setIsModalOpen(true);
-    await fetchSuppliers(); 
-  };
- 
-
-const handleSave = async (locationData: Omit<Location, "id">) => {
-  console.log("Data location before update: ", JSON.stringify(locationData, null, 2));
-
-  // Định nghĩa lại warehouseId
-  const updatedLocationData = {
-    ...locationData,
-    warehouseId: employee?.warehouseId, // Thay thế bằng giá trị warehouseId mới
+    await fetchSuppliers();
   };
 
-  console.log("Data location after update: ", JSON.stringify(updatedLocationData, null, 2));
+  const handleSave = async (locationData: Omit<Location, "id">) => {
+    console.log(
+      "Data location before update: ",
+      JSON.stringify(locationData, null, 2),
+    );
 
-  try {
-    // Gửi dữ liệu POST
-    await axios.post("http://localhost:8888/v1/api/locations", updatedLocationData);
+    // Định nghĩa lại warehouseId
+    const updatedLocationData = {
+      ...locationData,
+      warehouseId: employee?.warehouseId, // Thay thế bằng giá trị warehouseId mới
+    };
 
-    // Hiển thị thông báo thành công
-    Swal.fire({
-      title: "Thành công!",
-      text: "Đã lưu vị trí kho với Warehouse ID mới thành công.",
-      icon: "success",
-      confirmButtonText: "OK",
-    });
+    console.log(
+      "Data location after update: ",
+      JSON.stringify(updatedLocationData, null, 2),
+    );
 
-    setIsModalOpen(false); // Đóng modal sau khi lưu thành công
-  } catch (error) {
-    console.error("Error saving location:", error);
+    try {
+      // Gửi dữ liệu POST
+      await axios.post(
+        "http://localhost:8888/v1/api/locations",
+        updatedLocationData,
+      );
 
-    // Hiển thị thông báo thất bại
-    Swal.fire({
-      title: "Thất bại!",
-      text: "Không thể lưu vị trí kho. Vui lòng thử lại.",
-      icon: "error",
-      confirmButtonText: "OK",
-    });
-  }
-};
+      // Hiển thị thông báo thành công
+      Swal.fire({
+        title: "Thành công!",
+        text: "Đã lưu vị trí kho với Warehouse ID mới thành công.",
+        icon: "success",
+        confirmButtonText: "OK",
+      });
 
+      setIsModalOpen(false); // Đóng modal sau khi lưu thành công
+    } catch (error) {
+      console.error("Error saving location:", error);
+
+      // Hiển thị thông báo thất bại
+      Swal.fire({
+        title: "Thất bại!",
+        text: "Không thể lưu vị trí kho. Vui lòng thử lại.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
+  };
 
   const fetchLocations = useCallback(async () => {
     try {
       if (!employee || !employee.warehouseId) return;
-      const response = await axios.get<Location[]>(`http://localhost:8888/v1/api/locations/warehouse/${employee?.warehouseId}`);
-      console.log("Fetched locations:", response.data); 
+      const response = await axios.get<Location[]>(
+        `http://localhost:8888/v1/api/locations/warehouse/${employee?.warehouseId}`,
+      );
+      console.log("Fetched locations:", response.data);
       setLocations(response.data);
     } catch (error) {
       console.error("Error fetching locations:", error);
     }
-  }, [employee,]);
+  }, [employee]);
 
   useEffect(() => {
     fetchLocations();
     fetchSuppliers();
-  }, [fetchLocations,fetchSuppliers,globalValue]);
+  }, [fetchLocations, fetchSuppliers, globalValue]);
 
   const handleSupplierChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedSupplier(e.target.value);
@@ -197,6 +207,11 @@ const handleSave = async (locationData: Omit<Location, "id">) => {
   };
   const handleCloseModal = () => {
     setShowAddSupplierForm(false);
+    fetchSuppliers();
+  };
+  const handleCloseLocationModal = () => {
+    setIsModalOpen(false);
+    fetchLocations(); // Gọi lại để tải dữ liệu vị trí mới
   };
 
   return (
@@ -207,7 +222,7 @@ const handleSave = async (locationData: Omit<Location, "id">) => {
         ) : (
           <p>No employee data available</p>
         )}
-         <CurrentTime />
+        <CurrentTime />
       </div>
       <div className="space-y-4 ">
         <div className="flex justify-between">
@@ -248,7 +263,7 @@ const handleSave = async (locationData: Omit<Location, "id">) => {
             </button>
 
             <select
-              value={globalValue > 0 ? location.toString() : ""}
+              value={location > 0 ? location.toString() : ""} // Đảm bảo giá trị rỗng nếu chưa chọn
               onChange={handleLocationChange}
               className="border-gray-300 ml-2 w-36 border-b pb-2"
               disabled={globalValue <= 0} // Vô hiệu hóa toàn bộ nếu số lượng sản phẩm là 0
@@ -277,22 +292,39 @@ const handleSave = async (locationData: Omit<Location, "id">) => {
                     return 1;
                   return b.remainingCapacity - a.remainingCapacity;
                 })
-                .map((location, index) => (
-                  <option
-                    key={location.id}
-                    value={location.id.toString()}
-                    disabled={
-                      globalValue <= 0 ||
-                      location.remainingCapacity < globalValue
-                    } // Vô hiệu hóa nếu không hợp lệ
-                  >
-                    {`${index + 1}. ${location.warehouseLocation} - Sức chứa: ${location.capacity ?? "N/A"}, Còn trống: ${
-                      location.remainingCapacity >= 0
-                        ? location.remainingCapacity
-                        : "N/A"
-                    }`}
-                  </option>
-                ))}
+                .map((location, index) => {
+                  const isMaintenance = location.status === "MAINTENANCE";
+                  const isFull = location.remainingCapacity < globalValue;
+
+                  return (
+                    <option
+                      key={location.id}
+                      value={location.id.toString()}
+                      disabled={globalValue <= 0 || isFull || isMaintenance}
+                      style={{
+                        color: isMaintenance
+                          ? "orange"
+                          : isFull
+                            ? "red"
+                            : "green",
+                      }}
+                    >
+                      {`${index + 1}. ${location.warehouseLocation} - Sức chứa: ${
+                        location.capacity ?? "N/A"
+                      }, Còn trống: ${
+                        location.remainingCapacity >= 0
+                          ? location.remainingCapacity
+                          : "N/A"
+                      } ${
+                        isMaintenance
+                          ? "- Bảo trì"
+                          : isFull
+                            ? "- Hết chỗ"
+                            : "- Sẵn sàng"
+                      }`}
+                    </option>
+                  );
+                })}
             </select>
           </div>
           {/* Modal thêm nhà cung cấp */}
@@ -307,7 +339,7 @@ const handleSave = async (locationData: Omit<Location, "id">) => {
           {isModalOpen && (
             <LocationModal
               initialData={selectedLocation}
-              onClose={() => setIsModalOpen(false)}
+              onClose={handleCloseLocationModal}
               onSave={handleSave}
             />
           )}

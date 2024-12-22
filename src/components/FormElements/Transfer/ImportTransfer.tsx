@@ -15,6 +15,7 @@ interface ProductDetail {
   quantity: number;
   bath: {
     batchName: string;
+    expiryDate: string;
   };
   productId: number;
 }
@@ -59,9 +60,10 @@ const OrderApprovalPage = () => {
         `http://localhost:8888/v1/api/deliveryNotes/import-transfer?warehouseId=${employee?.warehouseId}`,
       )
       .then((response) => {
-        const sortedOrders = response.data.sort((a: { id: number; }, b: { id: number; }) => b.id - a.id);  // Sắp xếp theo id giảm dần
+        const sortedOrders = response.data.sort(
+          (a: { id: number }, b: { id: number }) => b.id - a.id,
+        ); // Sắp xếp theo id giảm dần
         setOrders(sortedOrders);
-        
       })
       .catch((error) => {
         console.error("Error fetching transfer orders:", error);
@@ -131,7 +133,7 @@ const OrderApprovalPage = () => {
   const acceptOrder = () => {
     if (!selectedLocation) {
       Swal.fire(
-        "Warning",
+        "Xác nhận",
         "Vui lòng chọn vị trí lưu trữ trước khi chấp nhận.",
         "warning",
       );
@@ -141,7 +143,7 @@ const OrderApprovalPage = () => {
     if (selectedOrder) {
       // Chuẩn bị payload dựa trên thông tin đơn chuyển hiện tại
       const payload = {
-        employeeId: 3, // Thay thế ID nhân viên phù hợp
+        employeeId: employee?.id, // Thay thế ID nhân viên phù hợp
         import_Export_Details: productDetails.map((detail) => ({
           product_Id: detail.productId,
           quantity: detail.quantity,
@@ -158,7 +160,7 @@ const OrderApprovalPage = () => {
         .post("http://localhost:8888/v1/api/receipts/transfer", payload)
         .then((response) => {
           Swal.fire(
-            "Success",
+            "Thành công",
             "Đơn chuyển kho đã được chấp nhận và dữ liệu đã được gửi.",
             "success",
           );
@@ -171,8 +173,25 @@ const OrderApprovalPage = () => {
           setSelectedOrder(null);
         })
         .catch((error) => {
-          console.error("Error posting receipt:", error);
-          Swal.fire("Error", "Có lỗi xảy ra khi gửi dữ liệu.", "error");
+          // Kiểm tra phản hồi lỗi từ API
+          if (error.response && error.response.data) {
+            const { message } = error.response.data; // Lấy thông báo lỗi từ JSON
+            Swal.fire({
+              icon: "error",
+              title: "Có lỗi xảy ra khi nhập hàng!",
+              text: message || "Vui lòng thử lại.", // Hiển thị chi tiết lỗi
+              confirmButtonText: "OK",
+            });
+          } else {
+            // Trường hợp lỗi không có phản hồi từ API
+            console.error("Lỗi chuyển kho:", error);
+            Swal.fire({
+              icon: "error",
+              title: "Có lỗi xảy ra khi chuyển hàng!",
+              text: "Vui lòng thử lại.",
+              confirmButtonText: "OK",
+            });
+          }
         });
     }
   };
@@ -372,16 +391,31 @@ const OrderApprovalPage = () => {
                       const remainingCapacity =
                         (location.capacity ?? 0) - (location.currentLoad ?? 0);
                       const isDisabled = remainingCapacity < globalValue; // Kiểm tra nếu kho không hợp lệ
+                      const statusColor = isDisabled
+                        ? "red"
+                        : location.status === "MAINTENANCE"
+                          ? "orange"
+                          : "green";
 
                       return (
                         <option
                           key={location.id}
                           value={location.id}
-                          disabled={isDisabled}
+                          disabled={
+                            isDisabled || location.status === "MAINTENANCE"
+                          }
+                          style={{
+                            color: statusColor,
+                          }}
                         >
                           {location.warehouseLocation} - Dung lượng:{" "}
                           {location.capacity ?? 0} (Còn lại: {remainingCapacity}
-                          )
+                          ) -{" "}
+                          {isDisabled
+                            ? "Hết chỗ"
+                            : location.status === "MAINTENANCE"
+                              ? "Bảo trì"
+                              : "Sẵn sàng"}
                         </option>
                       );
                     })}

@@ -33,18 +33,18 @@ const TableInvoice = () => {
       console.error("data invoices: ", employee?.warehouseId);
       const invoiceList = response.data
         .filter((item: any) => {
-          const printDate = new Date(item.printDate);
+          const paymentDate = new Date(item.paymentDate);
           const searchLower = searchTerm.toLowerCase();
           return (
-            (!startDate || printDate >= startDate) &&
-            (!endDate || printDate <= endDate) &&
+            (!startDate || paymentDate >= startDate) &&
+            (!endDate || paymentDate <= endDate) &&
             (item.id.toString().includes(searchTerm) || searchLower === '' 
             ||  item.contactInfo.toLowerCase().includes(searchLower))
           );
         })
         .map((item: any) => ({
           id: item.id,
-          printDate: new Date(item.printDate),
+          paymentDate: new Date(item.paymentDate),
           contactInfo: item.contactInfo,
           // customerName: item.customer.customerName,
           // phoneNumber: item.customer.phoneNumber,
@@ -55,7 +55,7 @@ const TableInvoice = () => {
           status: item.status === 2 ? "Đã thanh toán" : "Tồn tại trả",
         }));
        const sorted = invoiceList.sort(
-          (a: { printDate: Date }, b: { printDate: Date }) => b.printDate.getTime() - a.printDate.getTime(),
+          (a: { paymentDate: Date }, b: { paymentDate: Date }) => b.paymentDate.getTime() - a.paymentDate.getTime(),
         );
         setInvoices(sorted);
   
@@ -172,7 +172,7 @@ const TableInvoice = () => {
                 <p className="text-sm text-black dark:text-white mr-3 text-blue-800 font-bold">HD000{invoice.id}</p>
               </div>
               <div className="col-span-3">
-                <p className="text-sm text-black dark:text-white mt-2">{format(invoice.printDate, 'dd/MM/yyyy - HH:mm:ss')}</p>
+                <p className="text-sm text-black dark:text-white mt-2">{format(invoice.paymentDate, 'dd/MM/yyyy - HH:mm:ss')}</p>
               </div>
               <div className="col-span-3">
                 <p className="text-sm text-black dark:text-white mt-2">{invoice.contactInfo}</p>
@@ -196,7 +196,7 @@ const TableInvoice = () => {
                     </label>
                     <ul className="list-none p-0">
                       <li className="mb-2 border-b border-gray-300 pb-2">Mã hóa đơn: <span className="font-bold text-blue-700">HD000{selectedInvoice.id}</span></li>
-                      <li className="mb-2 border-b border-gray-300 pb-2">Thời gian: <span className="font-bold">{format(invoice.printDate, 'dd/MM/yyyy - HH:mm:ss')}</span></li>
+                      <li className="mb-2 border-b border-gray-300 pb-2">Thời gian: <span className="font-bold">{format(invoice.paymentDate, 'dd/MM/yyyy - HH:mm:ss')}</span></li>
                       <li className="mb-2 border-b border-gray-300 pb-2">Trạng thái: <span className="font-bold text-blue-500">{invoice.status}</span></li>
                     </ul>
                   </div>

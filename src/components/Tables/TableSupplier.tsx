@@ -7,6 +7,7 @@ import FormUpdateSupplier from "@/components/FormElements/supplier/UpdateSupplie
 import API_ROUTES from "@/utils/apiRoutes"; // Import API routes từ cấu hình
 import axiosInstance from "@/utils/axiosInstance";
 import SearchInput from "../Search/SearchInputProps";
+import { AiFillEye, AiFillEdit, AiFillDelete } from "react-icons/ai";
 import Swal from "sweetalert2";
 
 const TableSupplier = () => {
@@ -77,6 +78,7 @@ const TableSupplier = () => {
   const handleCloseModal = () => {
     setShowAddSupplierForm(false);
     setShowUpdateSupplierForm(false);
+    fetchSuppliers();
   };
 
   const handleUpdateClick = (supplier: Supplier) => {
@@ -170,7 +172,7 @@ const TableSupplier = () => {
 
       <div className="container mx-auto">
         <div className="grid grid-cols-12 gap-4 border-t border-stroke bg-blue-700 px-4 py-4.5 font-bold text-white">
-          <div className="col-span-3 ">ID</div>
+          <div className="col-span-3 ml-2 ">ID</div>
           <div className="col-span-3 ">Tên nhà cung cấp</div>
           <div className="col-span-3 ">Số điện thoại</div>
           <div className="col-span-3 ">Hành động</div>
@@ -196,24 +198,32 @@ const TableSupplier = () => {
                   {supplier.phoneNumber}
                 </p>
               </div>
-              <div className="col-span-3">
+              <div className="col-span-3 flex space-x-2">
+                {/* Nút Xem */}
                 <button
-                  className="rounded bg-blue-500 px-4 py-2 text-white"
+                  className="flex items-center justify-center rounded bg-blue-500 p-2 text-white hover:bg-blue-600"
                   onClick={() => handleSupplierClick(supplier)}
                 >
-                  Xem
+                  <AiFillEye size={20} className="text-white" />{" "}
+                  {/* Icon Xem */}
                 </button>
+
+                {/* Nút Cập nhật */}
                 <button
-                  className="ml-2 rounded bg-yellow-500 px-4 py-2 text-white"
+                  className="flex items-center justify-center rounded bg-yellow-500 p-2 text-white hover:bg-yellow-600"
                   onClick={() => handleUpdateClick(supplier)}
                 >
-                  Cập nhật
+                  <AiFillEdit size={20} className="text-white" />{" "}
+                  {/* Icon Cập nhật */}
                 </button>
+
+                {/* Nút Xóa */}
                 <button
+                  className="bg-red hover:bg-red flex items-center justify-center rounded p-2 text-white"
                   onClick={() => handleDeleteSupplier(supplier.id)}
-                  className="ml-2 rounded bg-red px-4 py-2 text-white"
                 >
-                  Xóa
+                  <AiFillDelete size={20} className="text-white" />{" "}
+                  {/* Icon Xóa */}
                 </button>
               </div>
             </div>

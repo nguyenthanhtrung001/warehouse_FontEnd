@@ -9,6 +9,7 @@ import API_ROUTES from "@/utils/apiRoutes";
 import axiosInstance from "@/utils/axiosInstance";
 import { useEmployeeStore } from "@/stores/employeeStore";
 import Swal from "sweetalert2";
+import { AiFillEye, AiFillEdit, AiFillDelete } from "react-icons/ai";
 
 const TableEmployee = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -29,47 +30,46 @@ const TableEmployee = () => {
       console.error("Employee data is not available.");
       return;
     }
-  if (employee.position.toLowerCase().includes("admin")) 
-    {
-      employee.warehouseId = 0 ;
+    if (employee.position.toLowerCase().includes("admin")) {
+      employee.warehouseId = 0;
     }
     try {
-      console.log("nha vien kho: ", employee.warehouseId)
+      console.log("nha vien kho: ", employee.warehouseId);
       const response = await axiosInstance.get(
         API_ROUTES.EMPLOYEES_BY_WAREHOUSE_AND_NOT_EMPLOYEE(
           employee.warehouseId,
-          employee.id
-        )
+          employee.id,
+        ),
       );
       let filteredEmployees = response.data;
-  
+
       // Apply flexible filters based on employee position
       const position = employee.position.toLowerCase();
       console.log("nhan vien:", position);
       if (position.includes("quản lý")) {
         // Only include "nhân viên" positions
         filteredEmployees = filteredEmployees.filter(
-          (emp: { position: string }) => emp.position.toLowerCase().includes("nhân viên")
+          (emp: { position: string }) =>
+            emp.position.toLowerCase().includes("nhân viên"),
         );
       } else if (position.includes("admin")) {
         // Exclude "admin" and "nhân viên" positions
         filteredEmployees = filteredEmployees.filter(
-          (emp: { position: string }) => emp.position.toLowerCase().includes("quản lý")
+          (emp: { position: string }) =>
+            emp.position.toLowerCase().includes("quản lý"),
         );
       }
-  
+
       const sortedCustomers = filteredEmployees.sort(
-        (a: { id: number }, b: { id: number }) => b.id - a.id  // Sắp xếp giảm dần theo id
+        (a: { id: number }, b: { id: number }) => b.id - a.id, // Sắp xếp giảm dần theo id
       );
       setEmployees(sortedCustomers);
-      console.log("nhan vien:", JSON.stringify(sortedCustomers, null,2));
+      console.log("nhan vien:", JSON.stringify(sortedCustomers, null, 2));
     } catch (error) {
       console.error("Error fetching employees: ", error);
       setError("Có lỗi xảy ra khi lấy dữ liệu nhân viên.");
     }
   };
-  
-  
 
   useEffect(() => {
     fetchEmployees();
@@ -124,7 +124,6 @@ const TableEmployee = () => {
   // Hàm tạo tài khoản
 
   const createAccount = async (employeeId: number) => {
-   
     // Hiển thị hộp thoại xác nhận
     const result = await Swal.fire({
       title: "Xác nhận",
@@ -173,6 +172,41 @@ const TableEmployee = () => {
       }
     }
   };
+  const deleteEmployee = async (employeeId: number) => {
+    const result = await Swal.fire({
+      title: "Xác nhận",
+      text: "Bạn có chắc chắn muốn xóa nhân viên này?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Đồng ý",
+      cancelButtonText: "Hủy",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await axiosInstance.delete(
+          `http://localhost:8888/v1/api/employees/${employeeId}noooooooooooooooooooo`,
+        );
+        Swal.fire({
+          icon: "success",
+          title: "Thành công",
+          text: "Nhân viên đã được xóa.",
+          confirmButtonText: "OK",
+        });
+
+        // Tải lại danh sách nhân viên sau khi xóa
+        fetchEmployees();
+      } catch (error) {
+        console.error("Error deleting employee:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: "Có lỗi xảy ra khi xóa nhân viên.",
+          confirmButtonText: "Thử lại",
+        });
+      }
+    }
+  };
 
   return (
     <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
@@ -185,7 +219,7 @@ const TableEmployee = () => {
           </div>
           <div className="col-span-3 px-2 font-bold">
             <button
-              className="rounded bg-green-600 px-4 py-2 text-white  flex justify-end"
+              className="flex justify-end rounded bg-green-600 px-4  py-2 text-white"
               onClick={() => {
                 setShowAddEmployeeForm(true);
                 setIsUpdate(false);
@@ -252,18 +286,32 @@ const TableEmployee = () => {
                   K000{employee.warehouseId}
                 </p>
               </div>
-              <div className="col-span-2">
+              <div className="col-span-2 flex space-x-2">
+                {/* Nút Xem */}
                 <button
-                  className="rounded bg-blue-500 px-4 py-2 text-white"
+                  className="flex items-center justify-center rounded bg-blue-500 px-3 py-2 text-white hover:bg-blue-600"
                   onClick={() => handleEmployeeClick(employee)}
                 >
-                  Xem
+                  <AiFillEye className="text-white" size={20} />{" "}
+                  {/* Icon Xem */}
                 </button>
+
+                {/* Nút Cập nhật */}
                 <button
-                  className="ml-2 rounded bg-yellow-500 px-4 py-2 text-white"
+                  className="flex items-center justify-center rounded bg-yellow-500 px-3 py-2 text-white hover:bg-yellow-600"
                   onClick={() => handleUpdateClick(employee)}
                 >
-                  Cập nhật
+                  <AiFillEdit className="text-white" size={20} />{" "}
+                  {/* Icon Cập nhật */}
+                </button>
+
+                {/* Nút Xóa */}
+                <button
+                  className="bg-red hover:bg-red flex items-center justify-center rounded px-3 py-2 text-white"
+                  onClick={() => deleteEmployee(employee.id)}
+                >
+                  <AiFillDelete className="text-white" size={20} />{" "}
+                  {/* Icon Xóa */}
                 </button>
               </div>
             </div>

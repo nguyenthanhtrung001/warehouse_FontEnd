@@ -154,16 +154,31 @@ const TransferPage = () => {
 
             // Xóa danh sách sản phẩm đã chọn sau khi xác nhận chuyển hàng
             setSelectedProducts([]);
+            console.log(JSON.stringify(payload,null,2));
+            
           })
           .catch((error) => {
-            console.error("Error during transfer:", error);
-            Swal.fire({
-              icon: "error",
-              title: "Có lỗi xảy ra khi chuyển hàng!",
-              text: "Vui lòng thử lại.",
-              confirmButtonText: "OK",
-            });
+            // Kiểm tra phản hồi lỗi từ API
+            if (error.response && error.response.data) {
+              const { message } = error.response.data; // Lấy thông báo lỗi từ JSON
+              Swal.fire({
+                icon: "error",
+                title: "Có lỗi xảy ra khi chuyển hàng!",
+                text: message || "Vui lòng thử lại.", // Hiển thị chi tiết lỗi
+                confirmButtonText: "OK",
+              });
+            } else {
+              // Trường hợp lỗi không có phản hồi từ API
+              console.error("Error during transfer:", error);
+              Swal.fire({
+                icon: "error",
+                title: "Có lỗi xảy ra khi chuyển hàng!",
+                text: "Vui lòng thử lại.",
+                confirmButtonText: "OK",
+              });
+            }
           });
+          
       }
     });
   };
@@ -196,27 +211,27 @@ const TransferPage = () => {
   const updateProductQuantity = (productId: number, newQuantity: number) => {
     // Tìm sản phẩm cần cập nhật
     const product = selectedProducts.find((item) => item.id === productId);
-    
+  
     if (product) {
-      // Kiểm tra điều kiện số lượng trả lại không vượt quá số lượng hiện tại
-      if (product.quantityReturn > product.quantity ) {
-        setSelectedProducts(
-          selectedProducts.map((item) =>
-            item.id === productId
-              ? { ...item, quantity: newQuantity }
-              : item
-          )
-        );
-      } else {
-        // Điều kiện không thỏa mãn, có thể hiển thị thông báo lỗi
+      // Kiểm tra điều kiện số lượng mới không vượt quá `quantityReturn`
+      if (newQuantity > product.quantityReturn) {
+        // Hiển thị thông báo lỗi nếu vượt quá số lượng cho phép
         Swal.fire({
           title: "Số lượng không hợp lệ",
-          text: "Số lượng trả lại vượt quá số lượng sản phẩm có sẵn.",
+          text: `Số lượng chuyển kho không thể vượt quá ${product.quantityReturn}.`,
           icon: "error",
         });
+      } else {
+        // Cập nhật số lượng nếu hợp lệ
+        setSelectedProducts(
+          selectedProducts.map((item) =>
+            item.id === productId ? { ...item, quantity: newQuantity } : item
+          )
+        );
       }
     }
   };
+  
   
 
   const getCurrentDateTime = () => {
@@ -375,7 +390,7 @@ const TransferPage = () => {
           placeholder="Nhập tên sản phẩm"
         />
         <ul className="mt-4 space-y-2">
-          {currentProducts.map((product) => (
+          {filteredProducts.map((product) => (
             <li
               key={product.id}
               className="flex items-center justify-between rounded-lg bg-white p-3 shadow-md transition-transform hover:scale-105"
@@ -421,6 +436,7 @@ const TransferPage = () => {
         <table className="min-w-full overflow-hidden rounded-lg bg-white shadow-lg">
           <thead>
             <tr className="text-gray-700 bg-blue-200">
+               <th className="px-6 py-3 text-left">ID</th>
               <th className="px-6 py-3 text-left">Tên Sản Phẩm</th>
               <th className="px-6 py-3 text-center">Số Lượng</th>
               <th className="px-6 py-3 text-center">Hành Động</th>
@@ -432,6 +448,7 @@ const TransferPage = () => {
                 key={product.id}
                 className="hover:bg-gray-100 border-b transition-colors"
               >
+                 <td className="px-6 py-3">MH000{product.id}</td>
                 <td className="px-6 py-3">{product.productName}</td>
                 <td className="px-6 py-3 text-center">
                   <input

@@ -17,7 +17,7 @@ import { Location } from "@/types/Location";
 // Enum trạng thái
 const LocationStatus = {
   AVAILABLE: "AVAILABLE", // Có sẵn
-  OCCUPIED: "OCCUPIED", // Đang được sử dụng
+  // OCCUPIED: "OCCUPIED", // Đang được sử dụng
   MAINTENANCE: "MAINTENANCE", // Đang bảo trì
 } as const;
 
@@ -124,8 +124,8 @@ const LocationModal: React.FC<LocationModalProps> = ({
             onChange={handleSelectChange}
           >
             <MenuItem value="">Chọn trạng thái</MenuItem>
-            <MenuItem value="AVAILABLE">Có sẵn</MenuItem>
-            <MenuItem value="OCCUPIED">Đang được sử dụng</MenuItem>
+            <MenuItem value="AVAILABLE">Hoạt động</MenuItem>
+            {/* <MenuItem value="OCCUPIED">Đang được sử dụng</MenuItem> */}
             <MenuItem value="MAINTENANCE">Đang bảo trì</MenuItem>
           </Select>
         </FormControl>

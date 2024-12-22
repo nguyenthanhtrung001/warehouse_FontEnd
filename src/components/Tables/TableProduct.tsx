@@ -191,10 +191,11 @@ const TableProduct = () => {
 
       <div className="container mx-auto">
         <div className="grid grid-cols-12 gap-4 border-t border-stroke px-4 py-4.5 bg-blue-700 text-white font-bold">
+        <div className="col-span-1 font-medium ml-6">ID</div>
           <div className="col-span-4 font-medium ml-6">Tên mặt hàng</div>
           <div className="col-span-2 font-medium">Nhóm hàng</div>
           <div className="col-span-2 font-medium">Thương hiệu</div>
-          <div className="col-span-2 font-medium">Tồn kho</div>
+          <div className="col-span-1 font-medium">Tồn kho</div>
           <div className="col-span-2 font-medium">Giá</div>
         </div>
       </div>
@@ -203,11 +204,14 @@ const TableProduct = () => {
         <React.Fragment key={product.id}>
           <div className="container mx-auto px-4 mb-1 border-b border-gray-200 p-1">
             <div className="grid grid-cols-12 gap-4">
+            <div className="col-span-1">
+                <p className="text-sm text-black dark:text-white mt-2 font-bold text-blue-600">MH000{product.id}</p>
+              </div>
               <div
                 className="col-span-4 flex flex-col gap-4 sm:flex-row sm:items-center"
                 onClick={() => handleProductClick(product)}
               >
-                <CheckboxTwo />
+              
                 <div className="w-12 h-12 rounded-md">
                   <Image
                     src={product.image}
@@ -225,7 +229,7 @@ const TableProduct = () => {
               <div className="col-span-2">
                 <p className="text-sm text-black dark:text-white mt-2">{product.brandName}</p>
               </div>
-              <div className="col-span-2">
+              <div className="col-span-1">
                 <p className="text-sm text-black dark:text-white mt-2">{product.sold}</p>
               </div>
               <div className="col-span-2">

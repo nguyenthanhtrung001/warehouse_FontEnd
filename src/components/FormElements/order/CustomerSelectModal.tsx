@@ -3,6 +3,7 @@ import Modal from "@/components/Modal/Modal";
 import axiosInstance from "@/utils/axiosInstance";
 import API_ROUTES from "@/utils/apiRoutes";
 import ContactInfoForm from "@/components/FormElements/customer/ContactInfoForm";
+import Swal from "sweetalert2";
 
 interface Customer {
   id: number;
@@ -119,10 +120,35 @@ const CustomerSelectModal: React.FC<CustomerSelectModalProps> = ({
   };
 
   // Handle deleting an address
-  const handleDeleteAddress = (addressId: number) => {
-    // No API calls for delete, just reload the addresses
-    fetchAddresses(selectedCustomer?.id!);
+  const handleDeleteAddress = async (addressId: number) => {
+    try {
+      // Hiển thị hộp thoại xác nhận trước khi xóa
+      const result = await Swal.fire({
+        title: "Xác nhận xóa",
+        text: "Bạn có chắc chắn muốn xóa địa chỉ này?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Xóa",
+        cancelButtonText: "Hủy",
+      });
+  
+      if (result.isConfirmed) {
+        // Gửi yêu cầu xóa địa chỉ
+        await axiosInstance.delete(`http://localhost:8888/v1/api/contact-info/${addressId}`);
+        
+        Swal.fire("Đã xóa", "Địa chỉ đã được xóa thành công.", "success");
+  
+        // Làm mới danh sách địa chỉ sau khi xóa
+        fetchAddresses(selectedCustomer?.id!);
+      }
+    } catch (error) {
+      console.error("Error deleting address:", error);
+      Swal.fire("Lỗi", "Đã xảy ra lỗi khi xóa địa chỉ. Vui lòng thử lại.", "error");
+    }
   };
+  
 
   return (
     <Modal isVisible={isVisible} onClose={onClose} title="Chọn khách hàng">

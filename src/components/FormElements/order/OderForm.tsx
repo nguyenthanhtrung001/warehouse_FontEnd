@@ -142,8 +142,15 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-full p-4 text-xs text-black">
-      <div className="flex-2 w-2/3 p-4">
+    <div className="flex h-screen w-full p-2 text-xs text-black">
+      <div className="flex-2 w-2/3 p-2">
+        {/* Nút Quay Lại */}
+        <button
+          className="text-sm bg-gray-300 hover:bg-gray-400 focus:ring-gray-500 mb-5 rounded-md px-4 py-1 text-black shadow-lg focus:outline-none focus:ring-2"
+          onClick={() => window.history.back()}
+        >
+          ← Quay lại
+        </button>
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-black">ĐẶT HÀNG</h1>
           <div className="flex items-center space-x-2">

@@ -44,7 +44,7 @@ const UpdateReceipt: React.FC = () => {
     };
 
     fetchReceipts();
-  }, []);
+  }, [employee]);
 
   const fetchReceiptById = async (receiptId: string) => {
     try {
@@ -169,7 +169,15 @@ const UpdateReceipt: React.FC = () => {
   return (
     <div className="flex w-full h-screen p-4 text-xs text-black">
       <ToastContainer />
-      <div className="flex-2 w-2/3 p-4">
+      
+      <div className="flex-2 w-2/3 p-2">
+        {/* Nút Quay Lại */}
+        <button
+          className="text-sm bg-gray-300 hover:bg-gray-400 focus:ring-gray-500 mb-5 rounded-md px-4 py-1 text-black shadow-lg focus:outline-none focus:ring-2"
+          onClick={() => window.history.back()}
+        >
+          ← Quay lại
+        </button>
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-3xl font-bold text-black">TRẢ HÀNG NHẬP</h1>
           <div className="flex items-center space-x-2">

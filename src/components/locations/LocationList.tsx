@@ -21,7 +21,7 @@ interface LocationListProps {
 // Enum trạng thái
 const LocationStatus = {
   AVAILABLE: "AVAILABLE", // Có sẵn
-  OCCUPIED: "OCCUPIED", // Đang được sử dụng
+  // OCCUPIED: "OCCUPIED", // Đang được sử dụng
   MAINTENANCE: "MAINTENANCE", // Đang bảo trì
 } as const;
 
@@ -91,9 +91,9 @@ const LocationList: React.FC<LocationListProps> = ({
               </TableCell>
               <TableCell align="center">
                 {location.status === LocationStatus.AVAILABLE
-                  ? "Có sẵn"
-                  : location.status === LocationStatus.OCCUPIED
-                    ? "Đang được sử dụng"
+                  ? "Hoạt động"
+                  // : location.status === LocationStatus.OCCUPIED
+                  //   ? "Đang được sử dụng"
                     : location.status === LocationStatus.MAINTENANCE
                       ? "Đang bảo trì"
                       : "Không xác định"}

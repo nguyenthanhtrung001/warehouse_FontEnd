@@ -5,29 +5,28 @@ import { format } from 'date-fns';
 const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
   let binary = '';
   const bytes = new Uint8Array(buffer);
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
+  for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
   return window.btoa(binary);
 };
 
-// Hàm tính toán các giá trị tổng hợp
+// Function to calculate totals
 const calculateTotals = (invoiceDetails: any[]) => {
-  const totalQuantity = invoiceDetails.reduce((acc, detail) => acc + detail.quantity, 0);
+  const totalQuantity = invoiceDetails.reduce((acc: any, detail: { quantity: any; }) => acc + detail.quantity, 0);
   const totalItems = invoiceDetails.length;
-  const totalPrice = invoiceDetails.reduce((acc, detail) => acc + detail.deliveryNote.price * detail.quantity, 0);
+  const totalPrice = invoiceDetails.reduce((acc: number, detail: { deliveryNote: { price: any; }; quantity: number; }) => acc + (detail.deliveryNote?.price || 0) * detail.quantity, 0);
 
   return { totalQuantity, totalItems, totalPrice };
 };
 
-// Hàm in PDF
-export const handlePrintPDF = async (cancel: any, details: any[]) => {
+// Function to handle PDF printing
+export const handlePrintPDF = async (cancel: { date: any; supplier: any; price?: number; status?: string; id: any; purchasePrice?: number; employee: any; warehouseTransfer?: string; }, details: any[]) => {
   const { totalQuantity, totalItems, totalPrice } = calculateTotals(details);
 
   // Fetch the font file
   const fontUrl = '/fonts/Roboto-Regular.ttf';
-  const fontData = await fetch(fontUrl).then(response => response.arrayBuffer());
+  const fontData = await fetch(fontUrl).then((response) => response.arrayBuffer());
   const fontBinary = arrayBufferToBase64(fontData);
 
   const doc = new jsPDF();
@@ -43,32 +42,31 @@ export const handlePrintPDF = async (cancel: any, details: any[]) => {
 
   // Add sub-header with invoice info
   doc.setFontSize(12);
-  // doc.text(`Mã phiếu trả NCC: DH000${cancel.id}`, 20, 30);
-  doc.text(`Ngày: ${format(new Date(cancel.date), 'dd/MM/yyyy - HH:mm:ss')}`, 20, 30);
-  doc.text(`Nhân viên thực hiện: nv000${cancel.employee}`, 20, 40);
-  // doc.text(`Nhà cung cấp: ${cancel.supplier}`, 20, 50);
-
-
+  doc.text(`Mã phiếu hủy: DH000${cancel.id}`, 20, 30);
+  doc.text(`Ngày: ${format(new Date(cancel.date), 'dd/MM/yyyy - HH:mm:ss')}`, 20, 40);
+  doc.text(`Nhân viên thực hiện: NV000${cancel.employee}`, 20, 50);
+ 
   // Add separator line
   doc.setLineWidth(0.5);
-  doc.line(20, 65, 190, 65);
+  doc.line(20, 70, 190, 70);
 
   // Add table header for item details
   doc.setFontSize(12);
-  doc.text('STT', 20, 70);
-  doc.text('Tên Sản Phẩm', 30, 70);
-  doc.text('Số Lượng', 100, 70);
-  doc.text('Đơn Giá', 130, 70);
-  doc.text('Thành Tiền', 160, 70);
+  doc.text('STT', 20, 75);
+  doc.text('Mã Sản Phẩm', 30, 75);
+  doc.text('Tên Sản Phẩm', 70, 75);
+  doc.text('Số Lượng', 130, 75);
+  doc.text('Thành Tiền', 160, 75);
 
   // Add table contents
-  let yPosition = 80;
-  details.forEach((detail, index) => {
+  let yPosition = 85;
+  details.forEach((detail: { quantity: number; deliveryNote: { price: any; }; batchDetail_Id: any; nameProduct: any; }, index: number) => {
+    const totalPricePerItem = detail.quantity * (detail.deliveryNote?.price || 0);
     doc.text(`${index + 1}`, 20, yPosition);
-    doc.text(detail.nameProduct, 30, yPosition);
-    doc.text(detail.quantity.toString(), 100, yPosition);
-    // doc.text(detail.deliveryNote.price.toFixed(2), 130, yPosition);
-    // doc.text((detail.quantity * detail.deliveryNote.price).toFixed(2), 160, yPosition);
+    doc.text(`MKH000${detail.batchDetail_Id || 'N/A'}`, 30, yPosition);
+    doc.text(detail.nameProduct || 'Không rõ', 70, yPosition);
+    doc.text(detail.quantity.toString(), 130, yPosition);
+    doc.text(totalPricePerItem.toFixed(2), 160, yPosition);
     yPosition += 10;
   });
 
@@ -79,13 +77,13 @@ export const handlePrintPDF = async (cancel: any, details: any[]) => {
   yPosition += 10;
   doc.text(`Tổng Mặt Hàng: ${totalItems}`, 20, yPosition);
   yPosition += 10;
-  // doc.text(`Tổng Tiền: ${totalPrice.toFixed(2)} VND`, 20, yPosition);
+  doc.text(`Tổng Tiền: ${totalPrice.toFixed(2)} VND`, 20, yPosition);
 
   // Add footer
   yPosition += 20;
   doc.setFontSize(10);
-  // doc.text('Cảm ơn quý khách đã mua hàng!', 105, yPosition, { align: 'center' });
+  doc.text('Cảm ơn quý khách đã sử dụng dịch vụ!', 105, yPosition, { align: 'center' });
 
-  // Mở cửa sổ in ngay lập tức
-  doc.output('dataurlnewwindow'); // Mở PDF trong cửa sổ mới
+  // Open the PDF in a new window
+  doc.output('dataurlnewwindow');
 };

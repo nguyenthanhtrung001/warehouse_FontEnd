@@ -90,11 +90,21 @@ const TableProduct = () => {
   const handlePriceBlur = async (productId: number) => {
     if (editingProductId === productId && editedPrice !== null) {
       try {
+        const confirmResult = await Swal.fire({
+          title: "Xác nhận",
+          text: "Bạn có chắc chắn muốn cập nhật giá sản phẩm này?",
+          icon: "question",
+          showCancelButton: true,
+          confirmButtonText: "Có, cập nhật",
+          cancelButtonText: "Hủy",
+        });
+        if (confirmResult.isConfirmed) {
         const updatedProduct = products.map((product) =>
           product.id === productId
             ? { ...product, price: editedPrice }
             : product,
         );
+
         await axiosInstance.post(`http://localhost:8888/v1/api/prices`, {
           price: editedPrice,
           productId: productId,
@@ -109,6 +119,7 @@ const TableProduct = () => {
           icon: "success",
           confirmButtonText: "OK",
         });
+      }
       } catch (error) {
         Swal.fire({
           title: "Thất bại!",
@@ -119,6 +130,8 @@ const TableProduct = () => {
         console.error("Error updating product price: ", error);
       }
     }
+    
+  
   };
 
   // Pagination logic
